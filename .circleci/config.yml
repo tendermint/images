@@ -1,0 +1,68 @@
+version: 2.1
+
+commands:
+  build_image:
+    parameters:
+      step_name:
+        type: string
+      image_name:
+        type: string
+      organization:
+        type: string
+    steps:
+      - run:
+          name: << parameters.step_name >>
+          command: |
+            export LATEST_COMMIT_HASH=`git rev-list -1 HEAD`
+            export FOLDER_COMMIT_HASH=`git rev-list -1 HEAD << parameters.image_name >>`
+
+            if [[ $LATEST_COMMIT_HASH == $FOLDER_COMMIT_HASH ]]; then
+              cd << parameters.image_name >>
+              docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS
+              docker build -t << parameters.organization >>/<< parameters.image_name >> .
+              docker push << parameters.organization >>/<< parameters.image_name >>
+            fi
+
+jobs:
+  build:
+    machine: true
+    steps:
+      - checkout
+      - build_image:
+          step_name: "Build image: gaiad ECS validator"
+          image_name: "gaiad_validator_ecs"
+          organization: "testnets"
+      - build_image:
+          step_name: "Build image: gaiacli ECS"
+          image_name: "gaiacli_ecs"
+          organization: "testnets"
+      - build_image:
+          step_name: "Build image: IAM management"
+          image_name: "iam_management"
+          organization: "tendermintdev"
+      - build_image:
+          step_name: "Build image: website deployment"
+          image_name: "website_deployment"
+          organization: "tendermintdev"
+      - build_image:
+          step_name: "Build image: docs deployment"
+          image_name: "docs_deployment"
+          organization: "tendermintdev"
+      - build_image:
+          step_name: "Build image: voyager node-browsers"
+          image_name: "voyager_node_browser"
+          organization: "tendermintdev"
+      - build_image:
+          step_name: "Build image: voyager node"
+          image_name: "voyager_node"
+          organization: "tendermintdev"
+
+workflows:
+  version: 2.1
+  images:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only:
+                - master

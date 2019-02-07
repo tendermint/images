@@ -2,7 +2,13 @@
 
 terragrunt plan-all -detailed-exitcode
 
-if [ "$?" == 2 ]; then
+status=$?
+
+if [[ ${status} == 2 ]]; then
     echo 'export CHANGES_PLANNED=1' >> $BASH_ENV
+    exit 0
+elif [[ ${status} == 1 ]]; then
+    exit 1
+else
     exit 0
 fi

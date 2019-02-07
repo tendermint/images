@@ -1,0 +1,12 @@
+#!/bin/sh -x
+
+CONFIG_TOML_PATH=~/.gaiad/config/config.toml
+
+# /config folder is mounted to the ECS container host instance
+cp /config/config.toml ${CONFIG_TOML_PATH}
+
+# Add the last missing config values
+echo "moniker = \"${MONIKER}\"" >> ${CONFIG_TOML_PATH}
+echo "persistent_peers = \"${PERSISTENT_PEERS}\"" >> ${CONFIG_TOML_PATH}
+
+gaiad $@
