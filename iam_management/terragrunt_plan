@@ -1,0 +1,8 @@
+#!/bin/bash -x
+
+terragrunt plan-all -detailed-exitcode
+
+if [ "$?" == 2 ]; then
+    echo 'export CHANGES_PLANNED=1' >> $BASH_ENV
+    exit 0
+fi
