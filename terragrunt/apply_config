@@ -1,0 +1,14 @@
+#!/bin/bash -x
+
+terragrunt plan -detailed-exitcode -out ~/plan.output
+
+status=$?
+
+if [[ ${status} == 2 ]]; then
+    terragrunt apply ~/plan.output
+    exit 0
+elif [[ ${status} == 1 ]]; then
+    exit 1
+else
+    exit 0
+fi
