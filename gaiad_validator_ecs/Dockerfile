@@ -1,4 +1,4 @@
-FROM tendermint/gaia:develop
+FROM tendermint/gaia:stable
 
 COPY validator_setup /usr/bin/validator_setup
 COPY gaiad_cp_conf_start /usr/bin/gaiad_cp_conf_start
