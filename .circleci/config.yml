@@ -60,6 +60,10 @@ jobs:
           step_name: "Build image: terragrunt"
           image_name: "terragrunt"
           organization: "tendermintdev"
+      - build_image:
+          step_name: "Build image: jq_curl"
+          image_name: "jq_curl"
+          organization: "tendermintdev"
 
 workflows:
   version: 2.1
