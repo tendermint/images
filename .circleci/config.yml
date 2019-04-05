@@ -23,7 +23,7 @@ jobs:
     machine: true
     steps:
       - checkout
-      - build_image:
+      - build_docker_image:
           step_name: "Build image: gaiad ECS validator"
           image_name: "gaiad_validator_ecs"
           organization: "testnets"
@@ -32,7 +32,7 @@ jobs:
     machine: true
     steps:
       - checkout
-      - build_image:
+      - build_docker_image:
           step_name: "Build image: gaiacli ECS"
           image_name: "gaiacli_ecs"
           organization: "testnets"
@@ -41,7 +41,7 @@ jobs:
     machine: true
     steps:
       - checkout
-      - build_image:
+      - build_docker_image:
           step_name: "Build image: IAM management"
           image_name: "iam_management"
           organization: "tendermintdev"
@@ -50,7 +50,7 @@ jobs:
     machine: true
     steps:
       - checkout
-      - build_image:
+      - build_docker_image:
           step_name: "Build image: website deployment"
           image_name: "website_deployment"
           organization: "tendermintdev"
@@ -59,7 +59,7 @@ jobs:
     machine: true
     steps:
       - checkout
-      - build_image:
+      - build_docker_image:
           step_name: "Build image: voyager node-browsers"
           image_name: "voyager_node_browser"
           organization: "tendermintdev"
@@ -68,7 +68,7 @@ jobs:
     machine: true
     steps:
       - checkout
-      - build_image:
+      - build_docker_image:
           step_name: "Build image: voyager node"
           image_name: "voyager_node"
           organization: "tendermintdev"
@@ -77,7 +77,7 @@ jobs:
     machine: true
     steps:
       - checkout
-      - build_image:
+      - build_docker_image:
           step_name: "Build image: terragrunt"
           image_name: "terragrunt"
           organization: "tendermintdev"
@@ -86,7 +86,7 @@ jobs:
     machine: true
     steps:
       - checkout
-      - build_image:
+      - build_docker_image:
           step_name: "Build image: jq_curl"
           image_name: "jq_curl"
           organization: "tendermintdev"
