@@ -1,7 +1,7 @@
 version: 2.1
 
 commands:
-  build_image:
+  build_docker_image:
     parameters:
       step_name:
         type: string
@@ -13,18 +13,13 @@ commands:
       - run:
           name: << parameters.step_name >>
           command: |
-            export LATEST_COMMIT_HASH=`git rev-list -1 HEAD`
-            export FOLDER_COMMIT_HASH=`git rev-list -1 HEAD << parameters.image_name >>`
-
-            if [[ $LATEST_COMMIT_HASH == $FOLDER_COMMIT_HASH ]]; then
-              cd << parameters.image_name >>
-              docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS
-              docker build -t << parameters.organization >>/<< parameters.image_name >> .
-              docker push << parameters.organization >>/<< parameters.image_name >>
-            fi
+            cd << parameters.image_name >>
+            docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS
+            docker build -t << parameters.organization >>/<< parameters.image_name >> .
+            docker push << parameters.organization >>/<< parameters.image_name >>
 
 jobs:
-  build:
+  gaiad-validator-ecs:
     machine: true
     steps:
       - checkout
@@ -32,34 +27,65 @@ jobs:
           step_name: "Build image: gaiad ECS validator"
           image_name: "gaiad_validator_ecs"
           organization: "testnets"
+
+  gaiacli-ecs:
+    machine: true
+    steps:
+      - checkout
       - build_image:
           step_name: "Build image: gaiacli ECS"
           image_name: "gaiacli_ecs"
           organization: "testnets"
+
+  iam-management:
+    machine: true
+    steps:
+      - checkout
       - build_image:
           step_name: "Build image: IAM management"
           image_name: "iam_management"
           organization: "tendermintdev"
+
+  website-deployment-yarn:
+    machine: true
+    steps:
+      - checkout
       - build_image:
           step_name: "Build image: website deployment"
           image_name: "website_deployment"
           organization: "tendermintdev"
-      - build_image:
-          step_name: "Build image: docs deployment"
-          image_name: "docs_deployment"
-          organization: "tendermintdev"
+
+  voyager-node-browser:
+    machine: true
+    steps:
+      - checkout
       - build_image:
           step_name: "Build image: voyager node-browsers"
           image_name: "voyager_node_browser"
           organization: "tendermintdev"
+
+  voyager-node:
+    machine: true
+    steps:
+      - checkout
       - build_image:
           step_name: "Build image: voyager node"
           image_name: "voyager_node"
           organization: "tendermintdev"
+
+  terragrunt:
+    machine: true
+    steps:
+      - checkout
       - build_image:
           step_name: "Build image: terragrunt"
           image_name: "terragrunt"
           organization: "tendermintdev"
+
+  docs-deployment:
+    machine: true
+    steps:
+      - checkout
       - build_image:
           step_name: "Build image: jq_curl"
           image_name: "jq_curl"
@@ -67,10 +93,49 @@ jobs:
 
 workflows:
   version: 2.1
-  images:
+  build-image:
     jobs:
-      - build:
+      - gaiad-validator-ecs:
           filters:
             branches:
-              only:
-                - master
+              only: docker-gaiad-validator-ecs
+
+      - gaiacli-ecs:
+          filters:
+            branches:
+              only: docker-gaiacli-ecs
+
+      - iam-management:
+          filters:
+            branches:
+              only: docker-iam-management
+
+      - website-deployment-yarn:
+          filters:
+            branches:
+              only: docker-website-deployment-yarn
+
+      - docs-deployment:
+          filters:
+            branches:
+              only: docker-docs-deployment
+
+      - voyager-node-browser:
+          filters:
+            branches:
+              only: docker-voyager-node-browser
+
+      - voyager-node:
+          filters:
+            branches:
+              only: docker-voyager-node
+
+      - terragrunt:
+          filters:
+            branches:
+              only: docker-terragrunt
+
+      - docs-deployment:
+          filters:
+            branches:
+              only: docker-docs-deployment
