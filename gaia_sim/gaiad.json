@@ -1,24 +1,32 @@
 {
   "variables": {
-    "aws_profile": ""
+    "gaia_version": "develop",
+    "go_tarball_file_name": "go1.12.2.linux-amd64.tar.gz"
   },
   "builders": [
     {
-      "profile": "{{user `aws_profile`}}",
+      "ami_name": "gaia-{{ user `gaia_version` }}",
       "type": "amazon-ebs",
       "region": "us-east-1",
+      "instance_type": "t2.xlarge",
+      "ssh_username": "ec2-user",
+      "force_deregister": true,
+      "force_delete_snapshot": true,
+      "launch_block_device_mappings": [{
+        "device_name": "/dev/xvda",
+        "volume_size": 8,
+        "volume_type": "gp2",
+        "delete_on_termination": true
+      }],
       "source_ami_filter": {
         "filters": {
           "virtualization-type": "hvm",
-          "name": "CentOS Linux 7 x86_64 HVM EBS ENA*",
+          "name": "amzn2-ami-hvm-2.0*x86_64*",
           "root-device-type": "ebs"
         },
-        "owners": ["679593333241"],
+        "owners": ["137112412989"],
         "most_recent": true
-      },
-      "instance_type": "t2.xlarge",
-      "ssh_username": "centos",
-      "ami_name": "tendermint-gaiad-simulation{{isotime \"02-Jan-2006-03-04-05\"}}"
+      }
     }
   ],
   "provisioners": [
@@ -26,26 +34,30 @@
       "type": "shell",
       "inline": [
         "sleep 30",
-        "sudo yum -y update",
         "sudo yum -y install make git gcc curl",
-        "curl -L -O https://dl.google.com/go/go1.12.1.linux-amd64.tar.gz",
-        "sudo tar -C /usr/local -xzf go1.12.1.linux-amd64.tar.gz",
-        "rm go1.12.1.linux-amd64.tar.gz"
+        "curl -L -O https://dl.google.com/go/{{ user `go_tarball_file_name` }}",
+        "sudo tar -C /usr/local -xzf {{ user `go_tarball_file_name` }}",
+        "rm {{ user `go_tarball_file_name` }}"
       ]
     },
     {
       "type": "file",
-      "source": "multisim.sh",
+      "source": "files/multisim.sh",
       "destination": "/tmp/multisim.sh"
     },
     {
       "type": "file",
-      "source": "notify_slack.go",
+      "source": "files/notify_slack.go",
       "destination": "/tmp/notify_slack.go"
     },
     {
+      "type": "file",
+      "source": "files/set_env.sh",
+      "destination": "/tmp/set_env.sh"
+    },
+    {
       "type": "shell",
-      "script": "install_gaiad.sh"
+      "script": "files/install_gaiad.sh"
     }
   ]
 }

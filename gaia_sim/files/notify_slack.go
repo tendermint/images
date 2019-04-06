@@ -48,8 +48,8 @@ func main() {
 
 	var message string
 
-	if os.Args[2] == "0" {
-		message = "Seed " + os.Getenv("SEED") + " *PASS*"
+	if os.Args[1] == "0" {
+		message = "Seed " + os.Args[2] + " *PASS*"
 	} else {
 		message = fail_message
 	}
@@ -61,13 +61,14 @@ func main() {
 	msg := Message{os.Getenv("SLACK_CHANNEL_ID"), os.Getenv("SLACK_MSG_TS"), message}
 
 	encoded_payload, err := json.Marshal(msg)
+
 	if err != nil {
 		panic(err)
 	}
 
-	api_url := os.Args[1]
+	slack_url := "https://slack.com/api/chat.postMessage"
 
-	u, _ := url.ParseRequestURI(api_url)
+	u, _ := url.ParseRequestURI(slack_url)
 	url_str := u.String()
 
 	req, _ := http.NewRequest("POST", url_str, bytes.NewBuffer(encoded_payload))
