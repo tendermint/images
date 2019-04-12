@@ -14,51 +14,37 @@ type Message struct {
 	Channel string `json:"channel"`
 	Thread  string `json:"thread_ts,omitempty"`
 	Text    string `json:"text"`
-	//	Payload Payload
 }
 
-/*
-type Payload struct {
-	Blocks []Block `json:"blocks"`
-}
-
-type Block struct {
-	Type string `json:"type"`
-	Text *Text  `json:"text,omitempty"`
-}
-
-type Text struct {
-	Type string `json:"type"`
-	Text string `json:"text"`
-}*/
-
-func (r *Message) Marshal() ([]byte, error) {
-	return json.Marshal(r)
+type SlackResponse struct {
+	Ts string `json:"ts"`
 }
 
 func main() {
-	fail_message := "Simulation with *seed " + os.Getenv("SEED") + "* failed! To replicate, run the command:  ```" +
+	fail_message := "Simulation with *seed " + os.Args[2] + "* failed! To replicate, run the command:  ```" +
 		`go test ./cmd/gaia/app -run TestFullGaiaSimulation \
 								-SimulationEnabled=true \
 								-SimulationNumBlocks=` + os.Getenv("BLOCKS") + ` \
 								-SimulationVerbose=true \
 								-SimulationCommit=true \
-								-SimulationSeed=` + os.Getenv("SEED") + ` \
+								-SimulationSeed=` + os.Args[2] + ` \
+								-SimulationPeriod=` + os.Getenv("PERIOD") + ` \
 								-v -timeout 24h` + "```"
 
 	var message string
-
 	if os.Args[1] == "0" {
 		message = "Seed " + os.Args[2] + " *PASS*"
-	} else {
+	} else if os.Args[1] == "1" {
 		message = fail_message
+	} else {
+		message = "Host finished running seeds: " + os.Args[2]
 	}
 
-	//	text := &Text{"mrkdwn", message}
-	//	block := Block{"section", text}
-	//	divider := Block{"divider", nil}
-	//	payload := Payload{[]Block{block, divider}}
-	msg := Message{os.Getenv("SLACK_CHANNEL_ID"), os.Getenv("SLACK_MSG_TS"), message}
+	msg_ts := ""
+	if len(os.Args) == 4 {
+		msg_ts = os.Args[3]
+	}
+	msg := Message{os.Getenv("SLACK_CHANNEL_ID"), msg_ts, message}
 
 	encoded_payload, err := json.Marshal(msg)
 
@@ -85,5 +71,7 @@ func main() {
 	defer resp.Body.Close()
 
 	body, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println("response Body:", string(body))
+	var data SlackResponse
+	json.Unmarshal(body, &data)
+	fmt.Printf("%v", data.Ts)
 }
