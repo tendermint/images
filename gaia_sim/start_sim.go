@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"io/ioutil"
 	"log"
 	"math"
 	"net/http"
@@ -22,11 +23,25 @@ type SlackPayload struct {
 	Text    string `json:"text"`
 }
 
+type SlackResponse struct {
+	Ok      bool   `json:"ok"`
+	Channel string `json:"channel"`
+	Ts      string `json:"ts"`
+	Message struct {
+		Type     string `json:"type"`
+		Subtype  string `json:"subtype"`
+		Text     string `json:"text"`
+		Ts       string `json:"ts"`
+		Username string `json:"username"`
+		BotID    string `json:"bot_id"`
+	} `json:"message"`
+}
+
 func make_ranges() map[int]string {
 	machines := make(map[int]string)
 	var str strings.Builder
 	index := 0
-	for i := 0; i < 36; i++ {
+	for i := 0; i < 400; i++ {
 		if math.Mod(float64(i), 35) == 0 {
 			if index != 0 {
 				machines[index] = str.String()
@@ -40,13 +55,13 @@ func make_ranges() map[int]string {
 	return machines
 }
 
-func push_to_slack(slack_token string, slack_channel_id string) {
+func push_to_slack(slack_token string, slack_channel_id string) string {
 	slack_url := "https://slack.com/api/chat.postMessage"
 
 	json_payload, _ := json.Marshal(
 		SlackPayload{
 			Channel: slack_channel_id,
-			Text:    "Simulation started!",
+			Text:    "Spinning up simulation environments!",
 		})
 
 	slack_payload := bytes.NewBuffer(json_payload)
@@ -63,9 +78,15 @@ func push_to_slack(slack_token string, slack_channel_id string) {
 	}
 
 	defer response.Body.Close()
+
+	body, _ := ioutil.ReadAll(response.Body)
+	var data SlackResponse
+	json.Unmarshal(body, &data)
+
+	return data.Ts
 }
 
-func start_sim(slack_token string, slack_channel_id string) {
+func start_sim(slack_token string, slack_channel_id string, msg_ts string) {
 	ami_id, has_ami := os.LookupEnv("AMI")
 
 	// TODO: decide how logging will work
@@ -85,15 +106,16 @@ func start_sim(slack_token string, slack_channel_id string) {
 
 	seeds := make_ranges()
 	for rng := range seeds {
-
 		user_data := `#!/bin/bash
-                  export BLOCKS=` + blocks + `
-                  export PERIOD=` + period + `
-                  export SEEDS=(` + seeds[rng] + `)
-                  export SLACK_TOKEN=` + slack_token + `
-                  export SLACK_CHANNEL_ID=` + slack_channel_id + `
-                  /home/ec2-user/go/src/github.com/cosmos/cosmos-sdk/multisim.sh > /home/ec2-user/sim_out 2>&1`
+                      export BLOCKS=` + blocks + `
+                      export PERIOD=` + period + `
+                      export SLACK_TOKEN=` + slack_token + `
+                      export SLACK_CHANNEL_ID=` + slack_channel_id + `
+                      export SLACK_MSG_TS=` + msg_ts + `
+                      cd /home/ec2-user/go/src/github.com/cosmos/cosmos-sdk/
+                      ./multisim.sh ` + seeds[rng] + `> /home/ec2-user/sim_out 2>&1`
 
+		fmt.Println(user_data)
 		svc := ec2.New(session.Must(session.NewSession()))
 		config := &ec2.RunInstancesInput{
 			InstanceInitiatedShutdownBehavior: aws.String("terminate"),
@@ -117,6 +139,6 @@ func main() {
 	slack_token, _ := os.LookupEnv("SLACK_TOKEN")
 	slack_channel_id, _ := os.LookupEnv("SLACK_CHANNEL_ID")
 
-	push_to_slack(slack_token, slack_channel_id)
-	start_sim(slack_token, slack_channel_id)
+	msg_ts := push_to_slack(slack_token, slack_channel_id)
+	start_sim(slack_token, slack_channel_id, msg_ts)
 }
