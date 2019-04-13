@@ -1,11 +1,10 @@
 {
   "variables": {
-    "gaia_version": "develop",
     "go_tarball_file_name": "go1.12.2.linux-amd64.tar.gz"
   },
   "builders": [
     {
-      "ami_name": "gaia-{{ user `gaia_version` }}",
+      "ami_name": "gaia-{{ env `GAIA_COMMIT_HASH` }}",
       "type": "amazon-ebs",
       "region": "us-east-1",
       "instance_type": "t2.xlarge",
@@ -57,7 +56,7 @@
     },
     {
       "type": "shell",
-      "script": "files/install_gaiad.sh"
+      "script": "files/install_gaiad.sh {{ env `GAIA_COMMIT_HASH` }}"
     }
   ]
 }
