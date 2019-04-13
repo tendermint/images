@@ -49,9 +49,6 @@ commands:
 
 jobs:
   build:
-    branches:
-      only:
-        - master
     executor: packer
     steps:
       - checkout
