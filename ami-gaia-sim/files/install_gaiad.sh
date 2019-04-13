@@ -9,7 +9,7 @@ mkdir -p ${GOPATH}/src/github.com/cosmos
 
 cd ${GOPATH}/src/github.com/cosmos
 git clone https://github.com/cosmos/cosmos-sdk
-cd cosmos-sdk && git checkout $1
+cd cosmos-sdk && git checkout ${GAIA_COMMIT_HASH}
 make tools install
 
 mv /tmp/notify_slack.go ~/go/src/github.com/cosmos/cosmos-sdk/notify_slack.go

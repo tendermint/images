@@ -57,7 +57,10 @@
     },
     {
       "type": "shell",
-      "script": "files/install_gaiad.sh {{ user `gaia_commit_hash` }}"
+      "script": "files/install_gaiad.sh",
+      "environment_vars": [
+        "GAIA_COMMIT_HASH={{ user `gaia_commit_hash` }}"
+      ]
     }
   ]
 }
