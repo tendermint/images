@@ -144,4 +144,4 @@ workflows:
       - gaia-sim-ami:
           filters:
             branches:
-              only: update-gaia-sim
+              only: ami-gaia-sim
