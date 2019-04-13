@@ -1,0 +1,174 @@
+version: 2.1
+
+executors:
+  packer:
+    docker:
+      - image: hashicorp/packer:1.3.5
+    working_directory: ~/packer
+
+commands:
+  build_docker_image:
+    parameters:
+      image_name:
+        type: string
+      org:
+        type: string
+    steps:
+      - run:
+          name: "Build docker image: << parameters.org>>/<< parameters.image_name >>"
+          command: |
+            cd << parameters.image_name >>
+            docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS
+            docker build -t << parameters.org >>/<< parameters.image_name >> .
+            docker push << parameters.org >>/<< parameters.image_name >>
+
+  build-ami:
+    parameters:
+      image_name:
+        type: string
+    steps:
+      - run:
+          name: "Validate packer template for << parameters.image_name >>"
+          command: |
+            cd << parameters.image_name >>
+            packer validate *.json
+      - run:
+          name: "Build AMI: << parameters.image_name >>"
+          command: |
+            cd << parameters.image_name >>
+            packer build *.json
+
+  run-sim:
+    steps:
+      - run:
+          name: "Run simulation"
+          command: |
+            cd gaia_sim
+            go get github.com/aws/aws-sdk-go
+            go run start_sim.go
+
+jobs:
+  gaia-sim-ami:
+    executor: packer
+    steps:
+      - checkout
+      - build-ami:
+          image_name: "gaia_sim"
+
+  gaiad-validator-ecs:
+    machine: true
+    steps:
+      - checkout
+      - build_docker_image:
+          image_name: "gaiad_validator_ecs"
+          org: "testnets"
+
+  gaiacli-ecs:
+    machine: true
+    steps:
+      - checkout
+      - build_docker_image:
+          image_name: "gaiacli_ecs"
+          org: "testnets"
+
+  iam-management:
+    machine: true
+    steps:
+      - checkout
+      - build_docker_image:
+          image_name: "iam_management"
+          org: "tendermintdev"
+
+  website-deployment-yarn:
+    machine: true
+    steps:
+      - checkout
+      - build_docker_image:
+          image_name: "website_deployment"
+          org: "tendermintdev"
+
+  voyager-node-browser:
+    machine: true
+    steps:
+      - checkout
+      - build_docker_image:
+          image_name: "voyager_node_browser"
+          org: "tendermintdev"
+
+  voyager-node:
+    machine: true
+    steps:
+      - checkout
+      - build_docker_image:
+          image_name: "voyager_node"
+          org: "tendermintdev"
+
+  terragrunt:
+    machine: true
+    steps:
+      - checkout
+      - build_docker_image:
+          image_name: "terragrunt"
+          org: "tendermintdev"
+
+  docs-deployment:
+    machine: true
+    steps:
+      - checkout
+      - build_docker_image:
+          image_name: "jq_curl"
+          org: "tendermintdev"
+
+workflows:
+  version: 2.1
+  build-image:
+    jobs:
+      - gaiad-validator-ecs:
+          filters:
+            branches:
+              only: docker-gaiad-validator-ecs
+
+      - gaiacli-ecs:
+          filters:
+            branches:
+              only: docker-gaiacli-ecs
+
+      - iam-management:
+          filters:
+            branches:
+              only: docker-iam-management
+
+      - website-deployment-yarn:
+          filters:
+            branches:
+              only: docker-website-deployment-yarn
+
+      - docs-deployment:
+          filters:
+            branches:
+              only: docker-docs-deployment
+
+      - voyager-node-browser:
+          filters:
+            branches:
+              only: docker-voyager-node-browser
+
+      - voyager-node:
+          filters:
+            branches:
+              only: docker-voyager-node
+
+      - terragrunt:
+          filters:
+            branches:
+              only: docker-terragrunt
+
+      - docs-deployment:
+          filters:
+            branches:
+              only: docker-docs-deployment
+
+      - gaia-sim-ami:
+          filters:
+            branches:
+              only: update-gaia-sim
