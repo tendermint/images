@@ -48,6 +48,15 @@ commands:
             go run start_sim.go
 
 jobs:
+  build:
+    branches:
+      only:
+        - master
+    executor: packer
+    steps:
+      - checkout
+      - build-ami:
+          image_name: "gaia_sim"
   gaia-sim-ami:
     executor: packer
     steps:
