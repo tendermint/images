@@ -37,6 +37,13 @@ run-sim: &run-sim
       go run start_sim.go
 
 jobs:
+  build:
+    <<: *packer
+    steps:
+      - checkout
+      - *build-ami-validate
+      - *build-ami
+
   gaia-sim-ami:
     <<: *packer
     steps:
