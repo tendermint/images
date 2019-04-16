@@ -5,7 +5,7 @@
   },
   "builders": [
     {
-      "ami_name": "gaia-{{ user `gaia_commit_hash` }}",
+      "ami_name": "gaia-sim-{{ user `gaia_commit_hash` }}",
       "type": "amazon-ebs",
       "region": "us-east-1",
       "instance_type": "t2.xlarge",

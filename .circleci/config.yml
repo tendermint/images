@@ -44,13 +44,6 @@ jobs:
       - *build-ami-validate
       - *build-ami
 
-  gaia-sim-ami:
-    <<: *packer
-    steps:
-      - checkout
-      - *build-ami-validate
-      - *build-ami
-
   gaiad-validator-ecs:
     machine: true
     steps:
@@ -147,8 +140,3 @@ workflows:
           filters:
             branches:
               only: docker-docs-deployment
-
-      - gaia-sim-ami:
-          filters:
-            branches:
-              only: ami-gaia-sim
