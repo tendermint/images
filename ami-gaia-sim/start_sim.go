@@ -127,7 +127,7 @@ func main() {
 	svc := ec2.New(session.Must(session.NewSession(&aws.Config{
 		Region: aws.String("us-east-1"),
 	})))
-	
+
 	ami_id, err := get_ami_id(conf.GitRevision, svc)
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
@@ -155,7 +155,6 @@ func main() {
 		usr_data.WriteString("cd /home/ec2-user/go/src/github.com/cosmos/cosmos-sdk/\n")
 		usr_data.WriteString("./multisim.sh " + seeds[rng] + "> /home/ec2-user/sim_out 2>&1")
 
-		fmt.Println(usr_data.String())
 		config := &ec2.RunInstancesInput{
 			InstanceInitiatedShutdownBehavior: aws.String("stop"),
 			InstanceType:                      aws.String("c4.8xlarge"),

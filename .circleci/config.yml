@@ -41,7 +41,7 @@ jobs:
     steps:
       - checkout
       - *build-ami-validate
-      #- *build-ami
+      - *build-ami
       - *run-sim
 
   docker-hashicorp-go:

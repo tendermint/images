@@ -8,14 +8,14 @@ mkdir ${HOME}/sim-logs
 sim() {
   seed=$1
   file="${HOME}/sim-logs/gaia-simulation-seed-${seed}.stdout"
-  go test ./cmd/gaia/app -run TestFullGaiaSimulation \
-                         -SimulationEnabled=true \
-                         -SimulationNumBlocks=${BLOCKS} \
-                         -SimulationVerbose=true \
-                         -SimulationCommit=true \
-                         -SimulationSeed=$seed \
-                         -SimulationPeriod=${PERIOD} \
-                         -v -timeout 24h > ${file}
+  go test -mod=readonly ./cmd/gaia/app -run TestFullGaiaSimulation \
+                                       -SimulationEnabled=true \
+                                       -SimulationNumBlocks=${BLOCKS} \
+                                       -SimulationVerbose=true \
+                                       -SimulationCommit=true \
+                                       -SimulationSeed=$seed \
+                                       -SimulationPeriod=${PERIOD} \
+                                       -v -timeout 24h > ${file}
 }
 
 args=("$@")
