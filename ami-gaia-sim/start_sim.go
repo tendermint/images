@@ -124,7 +124,10 @@ func main() {
 	conf.SlackToken = os.Args[5]
 	conf.MessageTs = msg_ts
 
-	svc := ec2.New(session.Must(session.NewSession()))
+	svc := ec2.New(session.Must(session.NewSession(&aws.Config{
+		Region: aws.String("us-east-1"),
+	})))
+	
 	ami_id, err := get_ami_id(conf.GitRevision, svc)
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
