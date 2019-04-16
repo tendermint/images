@@ -2,7 +2,7 @@ version: 2
 
 packer: &packer
   docker:
-    - image: hashicorp/packer:1.3.5
+    - image: tendermintdev/docker-hashicorp-go:latest
   working_directory: ~/packer
 
 build-docker: &build-docker
@@ -33,7 +33,6 @@ run-sim: &run-sim
     name: "Run simulation"
     command: |
       cd ${CIRCLE_BRANCH}
-      go get github.com/aws/aws-sdk-go
       go run start_sim.go
 
 jobs:
@@ -42,8 +41,14 @@ jobs:
     steps:
       - checkout
       - *build-ami-validate
-      - *build-ami
+      #- *build-ami
       - *run-sim
+
+  docker-hashicorp-go:
+    machine: true
+    steps:
+      - checkout
+      - *build-docker
 
   gaiad-validator-ecs:
     machine: true
@@ -141,3 +146,8 @@ workflows:
           filters:
             branches:
               only: docker-docs-deployment
+
+      - docker-hashicorp-go:
+          filters:
+            branches:
+              only: docker-hashicorp-go
