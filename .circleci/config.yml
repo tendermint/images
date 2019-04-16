@@ -33,7 +33,7 @@ run-sim: &run-sim
     name: "Run simulation"
     command: |
       cd ${CIRCLE_BRANCH}
-      go run start_sim.go
+      go run start_sim.go ${BLOCKS} ${PERIOD} ${GAIA_COMMIT_HASH} ${SLACK_CHANNEL_ID} ${SLACK_TOKEN}
 
 jobs:
   build:
