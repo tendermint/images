@@ -36,7 +36,7 @@ type SlackResponse struct {
 	Ts string `json:"ts"`
 }
 
-const num_seeds = 36
+const num_seeds = 400
 
 func make_ranges() map[int]string {
 	machines := make(map[int]string)
@@ -156,7 +156,7 @@ func main() {
 		usr_data.WriteString("./multisim.sh " + seeds[rng] + "> /home/ec2-user/sim_out 2>&1")
 
 		config := &ec2.RunInstancesInput{
-			InstanceInitiatedShutdownBehavior: aws.String("stop"),
+			InstanceInitiatedShutdownBehavior: aws.String("terminate"),
 			InstanceType:                      aws.String("c4.8xlarge"),
 			ImageId:                           aws.String(ami_id),
 			KeyName:                           aws.String("wallet-nodes"),
