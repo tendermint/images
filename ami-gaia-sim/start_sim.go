@@ -6,10 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"io/ioutil"
-	"log"
 	"math"
 	"net/http"
 	"os"
@@ -18,30 +17,32 @@ import (
 	"time"
 )
 
+type SimConfig struct {
+	SlackChannelId string
+	SlackToken     string
+	Blocks         string
+	Period         string
+	MessageTs      string
+	GitRevision    string
+}
+
 type SlackPayload struct {
 	Channel string `json:"channel"`
 	Text    string `json:"text"`
+	Thread  string `json:"thread_ts,omitempty"`
 }
 
 type SlackResponse struct {
-	Ok      bool   `json:"ok"`
-	Channel string `json:"channel"`
-	Ts      string `json:"ts"`
-	Message struct {
-		Type     string `json:"type"`
-		Subtype  string `json:"subtype"`
-		Text     string `json:"text"`
-		Ts       string `json:"ts"`
-		Username string `json:"username"`
-		BotID    string `json:"bot_id"`
-	} `json:"message"`
+	Ts string `json:"ts"`
 }
+
+const num_seeds = 36
 
 func make_ranges() map[int]string {
 	machines := make(map[int]string)
 	var str strings.Builder
 	index := 0
-	for i := 0; i < 400; i++ {
+	for i := 0; i < num_seeds; i++ {
 		if math.Mod(float64(i), 35) == 0 {
 			if index != 0 {
 				machines[index] = str.String()
@@ -51,94 +52,123 @@ func make_ranges() map[int]string {
 		}
 		str.WriteString(strconv.Itoa(i) + " ")
 	}
-
 	return machines
 }
 
-func push_to_slack(slack_token string, slack_channel_id string) string {
+func push_to_slack(slack_token string, slack_channel_id string, message string, message_ts string) (string, error) {
 	slack_url := "https://slack.com/api/chat.postMessage"
 
-	json_payload, _ := json.Marshal(
-		SlackPayload{
-			Channel: slack_channel_id,
-			Text:    "Spinning up simulation environments!",
-		})
+	slack_payload, json_err := json.Marshal(SlackPayload{
+		Channel: slack_channel_id,
+		Text:    message,
+	})
+	if json_err != nil {
+		return "", json_err
+	}
 
-	slack_payload := bytes.NewBuffer(json_payload)
-
-	request, _ := http.NewRequest("POST", slack_url, slack_payload)
+	request, _ := http.NewRequest("POST", slack_url, bytes.NewBuffer(slack_payload))
 	request.Header.Set("Authorization", "Bearer "+slack_token)
 	request.Header.Set("Content-Type", "application/json;charset=UTF-8")
-
 	http_client := &http.Client{Timeout: 10 * time.Second}
-	response, err := http_client.Do(request)
-
+	resp, err := http_client.Do(request)
 	if err != nil {
 		fmt.Println(err)
 	}
+	defer resp.Body.Close()
 
-	defer response.Body.Close()
-
-	body, _ := ioutil.ReadAll(response.Body)
 	var data SlackResponse
-	json.Unmarshal(body, &data)
-
-	return data.Ts
+	json_err = json.NewDecoder(resp.Body).Decode(&data)
+	if json_err != nil {
+		return "", json_err
+	}
+	return data.Ts, nil
 }
 
-func start_sim(slack_token string, slack_channel_id string, msg_ts string) {
-	ami_id, has_ami := os.LookupEnv("AMI")
+func get_ami_id(git_revision string, svc *ec2.EC2) (string, error) {
+	input := &ec2.DescribeImagesInput{
+		Filters: []*ec2.Filter{
+			{
+				Name: aws.String("name"),
+				Values: []*string{
+					aws.String("gaia-sim-" + git_revision),
+				},
+			},
+		},
+	}
 
-	// TODO: decide how logging will work
-	if !has_ami {
-		fmt.Println("FMT: No AMI!")
-		log.Println("LOG: No AMI!")
+	result, err := svc.DescribeImages(input)
+	if err != nil {
+		return "", err
+	}
+	return *result.Images[0].ImageId, nil
+}
+
+func main() {
+
+	// Yes I know the Args usage is fugly. I will make it nice and pretty
+	// with something like cobra, but this needs to get out the door and be
+	// useful now.
+	// It's safe from shennanigans as the program will only be called from Circle
+	// fixed configuration.
+	msg_ts, slack_err := push_to_slack(os.Args[5], os.Args[4], "Spinning up simulation environments!", "")
+	if slack_err != nil {
+		fmt.Println("Could not report back to slack: " + slack_err.Error())
 		os.Exit(1)
 	}
 
-	blocks, has_blocks := os.LookupEnv("BLOCKS")
-	period, has_period := os.LookupEnv("PERIOD")
+	conf := new(SimConfig)
+	conf.Blocks = os.Args[1]
+	conf.Period = os.Args[2]
+	conf.GitRevision = os.Args[3]
+	conf.SlackChannelId = os.Args[4]
+	conf.SlackToken = os.Args[5]
+	conf.MessageTs = msg_ts
 
-	if !has_blocks || !has_period {
-		blocks = "100"
-		period = "10"
+	svc := ec2.New(session.Must(session.NewSession()))
+	ami_id, err := get_ami_id(conf.GitRevision, svc)
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			default:
+				fmt.Println(aerr.Error())
+			}
+		} else {
+			// Print the error, cast err to awserr.Error to get the Code and
+			// Message from an error.
+			fmt.Println(err.Error())
+		}
+		os.Exit(1)
 	}
 
 	seeds := make_ranges()
 	for rng := range seeds {
-		user_data := `#!/bin/bash
-                      export BLOCKS=` + blocks + `
-                      export PERIOD=` + period + `
-                      export SLACK_TOKEN=` + slack_token + `
-                      export SLACK_CHANNEL_ID=` + slack_channel_id + `
-                      export SLACK_MSG_TS=` + msg_ts + `
-                      cd /home/ec2-user/go/src/github.com/cosmos/cosmos-sdk/
-                      ./multisim.sh ` + seeds[rng] + `> /home/ec2-user/sim_out 2>&1`
+		var usr_data strings.Builder
+		usr_data.WriteString("#!/bin/bash\n")
+		usr_data.WriteString("export BLOCKS=" + conf.Blocks + "\n")
+		usr_data.WriteString("export PERIOD=" + conf.Period + "\n")
+		usr_data.WriteString("export SLACK_TOKEN=" + conf.SlackToken + "\n")
+		usr_data.WriteString("export SLACK_CHANNEL_ID=" + conf.SlackChannelId + "\n")
+		usr_data.WriteString("export SLACK_MSG_TS=" + conf.MessageTs + "\n")
+		usr_data.WriteString("cd /home/ec2-user/go/src/github.com/cosmos/cosmos-sdk/\n")
+		usr_data.WriteString("./multisim.sh " + seeds[rng] + "> /home/ec2-user/sim_out 2>&1")
 
-		fmt.Println(user_data)
-		svc := ec2.New(session.Must(session.NewSession()))
+		fmt.Println(usr_data.String())
 		config := &ec2.RunInstancesInput{
-			InstanceInitiatedShutdownBehavior: aws.String("terminate"),
+			InstanceInitiatedShutdownBehavior: aws.String("stop"),
 			InstanceType:                      aws.String("c4.8xlarge"),
 			ImageId:                           aws.String(ami_id),
 			KeyName:                           aws.String("wallet-nodes"),
 			MaxCount:                          aws.Int64(1),
 			MinCount:                          aws.Int64(1),
-			UserData:                          aws.String(base64.StdEncoding.EncodeToString([]byte(user_data))),
+			UserData:                          aws.String(base64.StdEncoding.EncodeToString([]byte(usr_data.String()))),
 		}
-
-		result, _ := svc.RunInstances(config)
+		result, err := svc.RunInstances(config)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
 
 		for i := range result.Instances {
-			fmt.Println(result.Instances[i].InstanceId)
+			fmt.Println(*result.Instances[i].InstanceId)
 		}
 	}
-}
-
-func main() {
-	slack_token, _ := os.LookupEnv("SLACK_TOKEN")
-	slack_channel_id, _ := os.LookupEnv("SLACK_CHANNEL_ID")
-
-	msg_ts := push_to_slack(slack_token, slack_channel_id)
-	start_sim(slack_token, slack_channel_id, msg_ts)
 }

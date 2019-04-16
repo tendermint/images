@@ -32,7 +32,7 @@ run-sim: &run-sim
   run:
     name: "Run simulation"
     command: |
-      cd gaia_sim
+      cd ${CIRCLE_BRANCH}
       go get github.com/aws/aws-sdk-go
       go run start_sim.go
 
@@ -43,6 +43,7 @@ jobs:
       - checkout
       - *build-ami-validate
       - *build-ami
+      - *run-sim
 
   gaiad-validator-ecs:
     machine: true
