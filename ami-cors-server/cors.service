@@ -1,0 +1,18 @@
+[Unit]
+Description=CORS
+Requires=network-online.target
+After=network-online.target
+
+[Service]
+Environment="HOST=127.0.0.1"
+Environment="PORT=8080"
+Restart=on-failure
+User=cors
+Group=cors
+PermissionsStartOnly=true
+ExecStart=/usr/bin/node /home/cors/cors-anywhere/server.js
+ExecReload=/bin/kill -HUP $MAINPID
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=multi-user.target

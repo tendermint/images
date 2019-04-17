@@ -1,0 +1,43 @@
+{
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "region": "us-east-1",
+      "force_deregister": true,
+      "force_delete_snapshot": true,
+      "source_ami_filter": {
+        "filters": {
+          "virtualization-type": "hvm",
+          "name": "CentOS Linux 7 x86_64 HVM EBS ENA*",
+          "root-device-type": "ebs"
+        },
+        "owners": ["679593333241"],
+        "most_recent": true
+      },
+      "instance_type": "t2.xlarge",
+      "ssh_username": "centos",
+      "ami_name": "tendermint-cors"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "cors.service",
+      "destination": "/tmp/cors.service"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sleep 10",
+        "sudo yum -y update",
+        "sudo yum -y install epel-release",
+        "sudo yum -y install git nodejs npm",
+        "sudo useradd -m cors",
+        "sudo runuser -l cors -c 'git clone https://github.com/Rob--W/cors-anywhere.git'",
+        "sudo runuser -l cors -c 'cd ${HOME}/cors-anywhere && npm install'",
+        "sudo cp /tmp/cors.service /etc/systemd/system/cors.service",
+        "sudo systemctl enable cors"
+      ]
+    }
+  ]
+}

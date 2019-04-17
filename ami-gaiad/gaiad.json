@@ -1,0 +1,57 @@
+{
+  "variables": {
+    "aws_profile": null
+  },
+  "builders": [
+    {
+      "profile": "{{user `aws_profile`}}",
+      "type": "amazon-ebs",
+      "region": "us-east-1",
+      "source_ami_filter": {
+        "filters": {
+          "virtualization-type": "hvm",
+          "name": "CentOS Linux 7 x86_64 HVM EBS ENA*",
+          "root-device-type": "ebs"
+        },
+        "owners": ["679593333241"],
+        "most_recent": true
+      },
+      "instance_type": "t2.xlarge",
+      "ssh_username": "centos",
+      "ami_name": "tendermint-gaiad-{{isotime \"02-Jan-2006-03-04-05\"}}"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "sleep 30",
+        "sudo yum -y update",
+        "sudo yum -y install make git gcc curl",
+        "curl -L -O https://dl.google.com/go/go1.12.1.linux-amd64.tar.gz",
+        "sudo tar -C /usr/local -xzf go1.12.1.linux-amd64.tar.gz",
+        "rm go1.12.1.linux-amd64.tar.gz"
+      ]
+    },
+    {
+      "type": "file",
+      "source": "mount_ebs.sh",
+      "destination": "/tmp/mount_ebs.sh"
+    },
+    {
+      "type": "file",
+      "source": "gaiad.service",
+      "destination": "/tmp/gaiad.service"
+    },
+    {
+      "type": "shell",
+      "script": "install_gaiad.sh"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "gaiad version --long"
+      ]
+    }
+  ]
+}

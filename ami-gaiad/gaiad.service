@@ -1,0 +1,18 @@
+[Unit]
+Description=gaiad
+Requires=network-online.target
+After=network-online.target
+
+[Service]
+Type=exec
+User=centos
+Group=centos
+Restart=on-failure
+PermissionsStartOnly=true
+ExecStartPre=-/usr/bin/mount_ebs.sh
+ExecStart=/usr/bin/gaiad start
+ExecReload=/bin/kill -HUP $MAINPID
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=multi-user.target
