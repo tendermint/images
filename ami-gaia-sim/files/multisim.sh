@@ -35,11 +35,11 @@ for pid in ${pids[@]}; do
   last=$?
   seed=${args[$i]}
   if [[ ${last} -ne 0 ]]; then
-    go run notify_slack.go 1 ${seed} ${SLACK_MSG_TS} > "${HOME}/sim-logs/slack-$seed"
+    go run notify_slack.go 0 ${seed} > "${HOME}/sim-logs/slack-$seed"
   fi
   i=$(($i+1))
 done
 
-go run notify_slack.go 2 "${args[*]}" ${SLACK_MSG_TS} > "${HOME}/sim-logs/slack-done"
+go run notify_slack.go 1 "${args[*]}" ${SLACK_MSG_TS} > "${HOME}/sim-logs/slack-done"
 
 sudo shutdown -h now
