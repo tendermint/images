@@ -11,7 +11,7 @@ export PATH=$PATH:${GOBIN}
 mkdir -p ${GOPATH}/src/github.com/cosmos
 cd ${GOPATH}/src/github.com/cosmos
 git clone https://github.com/cosmos/cosmos-sdk
-cd cosmos-sdk && git checkout master
+cd cosmos-sdk && git checkout ${GAIAD_VERSION}
 make tools install
 
 sudo mv ${GOBIN}/gaiad /usr/bin/gaiad
@@ -21,4 +21,4 @@ sudo mv /tmp/mount_ebs.sh /usr/bin/mount_ebs.sh
 sudo mv /tmp/gaiad.service /usr/lib/systemd/system/gaiad.service
 sudo systemctl enable gaiad
 
-rm -rf ${GOPATH}
+sudo rm -rf ${GOPATH}
