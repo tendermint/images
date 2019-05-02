@@ -5,7 +5,7 @@ ENV PACKER_VERSION=1.4.0
 ENV TERRAGRUNT_VERSION=0.18.3
 ENV GO111MODULE=on
 
-RUN apk --no-cache add bash unzip git openssh curl jq && \
+RUN apk --no-cache add bash unzip git openssh curl jq make && \
     curl -OL https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip && \
     curl -OL https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_linux_amd64.zip && \
     curl -OL https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_amd64 && \
