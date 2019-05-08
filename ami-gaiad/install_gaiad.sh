@@ -16,6 +16,7 @@ make tools install
 
 sudo mv ${GOBIN}/gaiad /usr/bin/gaiad
 sudo mv /tmp/mount_ebs.sh /usr/bin/mount_ebs.sh
+sudo chmod u+x /usr/bin/mount_ebs.sh
 
 # Configure gaiad service
 sudo mv /tmp/gaiad.service /usr/lib/systemd/system/gaiad.service

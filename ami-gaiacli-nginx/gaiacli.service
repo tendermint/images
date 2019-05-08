@@ -5,8 +5,8 @@ After=network-online.target
 
 [Service]
 Type=exec
-User=centos
-Group=centos
+User=ec2-user
+Group=ec2-user
 Restart=on-failure
 PermissionsStartOnly=true
 ExecStart=/usr/bin/gaiacli rest-server --laddr tcp://0.0.0.0:1317 --trust-node true --node https://rpc.cosmos.network:26657

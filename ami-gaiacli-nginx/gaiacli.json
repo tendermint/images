@@ -1,7 +1,7 @@
 {
   "variables": {
     "gaiad_version": "master",
-    "go_tarball_file_name": "go1.12.2.linux-amd64.tar.gz"
+    "go_tarball_file_name": "go1.12.5.linux-amd64.tar.gz"
   },
   "builders": [
     {
@@ -18,14 +18,14 @@
       "source_ami_filter": {
         "filters": {
           "virtualization-type": "hvm",
-          "name": "CentOS Linux 7 x86_64 HVM EBS ENA*",
+          "name": "amzn2-ami-hvm-2.0*x86_64*",
           "root-device-type": "ebs"
         },
-        "owners": ["679593333241"],
+        "owners": ["137112412989"],
         "most_recent": true
       },
       "instance_type": "t2.xlarge",
-      "ssh_username": "centos",
+      "ssh_username": "ec2-user",
       "ami_name": "tendermint-gaiacli-{{ user `gaiad_version` }}"
     }
   ],
@@ -35,9 +35,8 @@
       "inline": [
         "sleep 30",
         "sudo yum -y update",
+        "sudo amazon-linux-extras install nginx1.12",
         "sudo yum -y install make git gcc curl",
-        "sudo yum -y install epel-release",
-        "sudo yum -y install nginx",
         "curl -L -O https://dl.google.com/go/{{ user `go_tarball_file_name` }}",
         "sudo tar -C /usr/local -xzf {{ user `go_tarball_file_name` }}",
         "rm {{ user `go_tarball_file_name` }}"
