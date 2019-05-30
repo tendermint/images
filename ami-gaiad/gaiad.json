@@ -33,7 +33,7 @@
     {
       "type": "shell",
       "inline": [
-        "sleep 30",
+        "sleep 20",
         "sudo yum -y update",
         "sudo yum -y install make git gcc curl",
         "curl -L -O https://dl.google.com/go/{{ user `go_tarball_file_name` }}",
