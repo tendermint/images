@@ -40,8 +40,12 @@ jobs:
     <<: *packer
     steps:
       - checkout
-      - *build-ami-validate
-      - *build-ami
+      - run:
+          name: "Build AMI"
+          command: |
+            cd ami-gaia-sim
+            packer validate *.json
+            packer build *.json
       - *run-sim
 
   docker-hashicorp-go:
