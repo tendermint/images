@@ -8,14 +8,14 @@ mkdir ${HOME}/sim-logs
 sim() {
   seed=$1
   file="${HOME}/sim-logs/gaia-sim-seed-${seed}.stdout"
-  go test -mod=readonly github.com/cosmos/cosmos-sdk/simapp -run TestFullAppSimulation \
-                                                            -SimulationEnabled=true \
-                                                            -SimulationNumBlocks=${BLOCKS} \
-                                                            -SimulationVerbose=true \
-                                                            -SimulationCommit=true \
-                                                            -SimulationSeed=$seed \
-                                                            -SimulationPeriod=${PERIOD} \
-                                                            -v -timeout 5h > ${file}
+  go test github.com/cosmos/cosmos-sdk/simapp -run TestFullAppSimulation \
+                                              -SimulationEnabled=true \
+                                              -SimulationNumBlocks=${BLOCKS} \
+                                              -SimulationVerbose=true \
+                                              -SimulationCommit=true \
+                                              -SimulationSeed=$seed \
+                                              -SimulationPeriod=${PERIOD} \
+                                              -v -timeout 5h > ${file}
 }
 
 args=("$@")
