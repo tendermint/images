@@ -36,8 +36,8 @@ type SlackResponse struct {
 	Ts string `json:"ts"`
 }
 
-const num_seeds = 36
-const instance_shutdown_behaviour = "stop"
+const num_seeds = 400
+const instance_shutdown_behaviour = "terminate"
 
 func make_ranges() map[int]string {
 	machines := make(map[int]string)
