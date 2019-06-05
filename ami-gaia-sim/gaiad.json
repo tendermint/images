@@ -42,22 +42,22 @@
     },
     {
       "type": "file",
-      "source": "files/multisim.sh",
+      "source": "src/multisim.sh",
       "destination": "/tmp/multisim.sh"
     },
     {
       "type": "file",
-      "source": "files/notify_slack.go",
+      "source": "src/notify_slack/notify_slack.go",
       "destination": "/tmp/notify_slack.go"
     },
     {
       "type": "file",
-      "source": "files/set_env.sh",
+      "source": "src/set_env.sh",
       "destination": "/tmp/set_env.sh"
     },
     {
       "type": "shell",
-      "script": "files/install_gaiad.sh",
+      "script": "src/install_gaiad.sh",
       "environment_vars": [
         "GAIA_COMMIT_HASH={{ user `gaia_commit_hash` }}"
       ]
