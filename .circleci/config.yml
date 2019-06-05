@@ -28,29 +28,30 @@ build-ami: &build-ami
       cd ${CIRCLE_BRANCH}
       packer build *.json
 
-run-sim: &run-sim
-  run:
-    name: "Run simulation"
-    command: |
-      cd ami-gaia-sim/src
-      if [[ "${CIRCLE_BRANCH}" == "master" ]]; then
-        go run start_sim.go ${BLOCKS} ${PERIOD} ${GAIA_COMMIT_HASH} ${SIM_BOT_DEV_CHANNEL} ${SIM_BOT_DEV_TOKEN}
-      else
-        go run start_sim.go ${BLOCKS} ${PERIOD} ${GAIA_COMMIT_HASH} ${SLACK_CHANNEL_ID} ${SLACK_TOKEN}
-      fi
-
 jobs:
   build:
     <<: *packer
     steps:
       - checkout
       - run:
-          name: "Build AMI"
+          name: "Run simulation"
           command: |
             cd ami-gaia-sim
+            if [[ "${CIRCLE_BRANCH}" == "master" ]]; then
+              export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_DEV
+              export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_DEV
+            else
+              export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_PROD
+              export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_PROD
+            fi
             packer validate *.json
             packer build *.json
-      - *run-sim
+            cd src
+            if [[ "${CIRCLE_BRANCH}" == "master" ]]; then
+              go run start_sim.go ${BLOCKS} ${PERIOD} ${GAIA_COMMIT_HASH} ${SLACK_CHANNEL_ID_DEV} ${SLACK_TOKEN_DEV}
+            else
+              go run start_sim.go ${BLOCKS} ${PERIOD} ${GAIA_COMMIT_HASH} ${SLACK_CHANNEL_ID_PROD} ${SLACK_TOKEN_PROD}
+            fi
 
   docker-hashicorp-go:
     machine: true
