@@ -14,4 +14,7 @@ make tools install
 
 mv /tmp/notify_slack.go ~/go/src/github.com/cosmos/cosmos-sdk/notify_slack.go
 mv /tmp/multisim.sh ~/go/src/github.com/cosmos/cosmos-sdk/multisim.sh
+
+go build notify_slack.go
+
 chmod u+x ~/go/src/github.com/cosmos/cosmos-sdk/multisim.sh

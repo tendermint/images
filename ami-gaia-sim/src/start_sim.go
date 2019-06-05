@@ -36,7 +36,8 @@ type SlackResponse struct {
 	Ts string `json:"ts"`
 }
 
-const num_seeds = 400
+const num_seeds = 36
+const instance_shutdown_behaviour = "stop"
 
 func make_ranges() map[int]string {
 	machines := make(map[int]string)
@@ -105,11 +106,6 @@ func get_ami_id(git_revision string, svc *ec2.EC2) (string, error) {
 
 func main() {
 
-	// Yes I know the Args usage is fugly. I will make it nice and pretty
-	// with something like cobra, but this needs to get out the door and be
-	// useful now.
-	// It's safe from shennanigans as the program will only be called from Circle
-	// fixed configuration.
 	msg_ts, slack_err := push_to_slack(os.Args[5], os.Args[4], "Spinning up simulation environments!", "")
 	if slack_err != nil {
 		fmt.Println("Could not report back to slack: " + slack_err.Error())
@@ -156,7 +152,7 @@ func main() {
 		usr_data.WriteString("./multisim.sh " + seeds[rng] + "> /home/ec2-user/sim_out 2>&1")
 
 		config := &ec2.RunInstancesInput{
-			InstanceInitiatedShutdownBehavior: aws.String("terminate"),
+			InstanceInitiatedShutdownBehavior: aws.String(instance_shutdown_behaviour),
 			InstanceType:                      aws.String("c4.8xlarge"),
 			ImageId:                           aws.String(ami_id),
 			KeyName:                           aws.String("wallet-nodes"),
