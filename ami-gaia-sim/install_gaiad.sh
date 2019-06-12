@@ -10,11 +10,6 @@ mkdir -p ${GOPATH}/src/github.com/cosmos
 cd ${GOPATH}/src/github.com/cosmos
 git clone https://github.com/cosmos/cosmos-sdk
 cd cosmos-sdk && git checkout ${GAIA_COMMIT_HASH}
-make tools install
+make runsim tools
 
-mv /tmp/notify_slack.go ~/go/src/github.com/cosmos/cosmos-sdk/notify_slack.go
-mv /tmp/multisim.sh ~/go/src/github.com/cosmos/cosmos-sdk/multisim.sh
-
-go build notify_slack.go
-
-chmod u+x ~/go/src/github.com/cosmos/cosmos-sdk/multisim.sh
+sudo mv /home/ec2-user/go/bin/runsim /usr/bin/runsim
