@@ -1,12 +1,7 @@
 {
   "variables": {
-<<<<<<< HEAD
-    "gaiad_version": "tags/v0.35.0",
-    "go_tarball_file_name": "go1.12.6.linux-amd64.tar.gz"
-=======
     "gaiad_version": "tags/v0.34.6",
     "go_tarball_file_name": "go1.12.5.linux-amd64.tar.gz"
->>>>>>> ba8222d... upgrading full nodes to latest version
   },
   "builders": [
     {
