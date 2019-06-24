@@ -18,10 +18,10 @@ import (
 )
 
 const (
-	numSeeds = 70
+	numSeeds = 420
 	// If the number of jobs is < the number of seeds, simulation will crash
 	numJobs                   = numSeeds
-	instanceShutdownBehaviour = "stop"
+	instanceShutdownBehaviour = "terminate"
 )
 
 var (
