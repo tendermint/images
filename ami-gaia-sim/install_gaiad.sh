@@ -1,6 +1,7 @@
 #!/usr/bin/bash
 
 sudo mv /tmp/set_env.sh /etc/profile.d/set_env.sh
+sudo mv /tmp/genesis.json /home/ec2-user/genesis.json
 sudo chmod u+x /etc/profile.d/set_env.sh
 source /etc/profile.d/set_env.sh
 

@@ -49,13 +49,21 @@ jobs:
               export MSGTS=`startsim -notify -b ${BLOCKS} -p ${PERIOD} -s ${SLACK_TOKEN_PROD} -c ${SLACK_CHANNEL_ID_PROD} -g ${GAIA_COMMIT_HASH}`
             fi
 
-            packer validate *.json
-            packer build *.json
+            #packer validate gaiad.json
+            #packer build gaiad.json
 
             if [[ "${CIRCLE_BRANCH}" == "master" ]]; then
-              startsim -b ${BLOCKS} -p ${PERIOD} -g ${GAIA_COMMIT_HASH} -c ${SLACK_CHANNEL_ID_DEV} -s ${SLACK_TOKEN_DEV}
+              if [[ "${GENESIS}" == "true" ]]; then
+                startsim -gen -b ${BLOCKS} -p ${PERIOD} -g ${GAIA_COMMIT_HASH} -c ${SLACK_CHANNEL_ID_DEV} -s ${SLACK_TOKEN_DEV}
+              else
+                startsim -b ${BLOCKS} -p ${PERIOD} -g ${GAIA_COMMIT_HASH} -c ${SLACK_CHANNEL_ID_DEV} -s ${SLACK_TOKEN_DEV}
+              fi
             else
-              startsim -b ${BLOCKS} -p ${PERIOD} -g ${GAIA_COMMIT_HASH} -c ${SLACK_CHANNEL_ID_PROD} -s ${SLACK_TOKEN_PROD}
+              if [[ "${GENESIS}" == "true" ]]; then
+                startsim -gen -b ${BLOCKS} -p ${PERIOD} -g ${GAIA_COMMIT_HASH} -c ${SLACK_CHANNEL_ID_PROD} -s ${SLACK_TOKEN_PROD}
+              else
+                startsim -b ${BLOCKS} -p ${PERIOD} -g ${GAIA_COMMIT_HASH} -c ${SLACK_CHANNEL_ID_PROD} -s ${SLACK_TOKEN_PROD}
+              fi
             fi
 
   docker-hashicorp-go:

@@ -20,7 +20,7 @@ import (
 
 const (
 	// If the number of jobs is < the number of seeds, simulation will crash
-	numSeeds                  = 36
+	numSeeds                  = 4
 	numJobs                   = numSeeds
 	instanceShutdownBehaviour = "stop"
 )
@@ -35,6 +35,7 @@ var (
 	logObjKey   string
 	slackErr    error
 	notifyOnly  bool
+	genesis     bool
 )
 
 func makeRanges() map[int]string {
@@ -75,7 +76,12 @@ func getAmiId(gitRevision string, svc *ec2.EC2) (string, error) {
 	return *result.Images[0].ImageId, nil
 }
 
-func buildCommand(jobs int, logObjKey, seeds, token, channel, timeStamp, blocks, period string) string {
+func buildCommand(jobs int, logObjKey, seeds, token, channel, timeStamp, blocks, period string, genesis bool) string {
+	if genesis {
+		return fmt.Sprintf("runsim -log \"%s\" -j %d -seeds \"%s\" -g /home/ec2-user/genesis.json "+
+			"-slack \"%s,%s,%s\" github.com/cosmos/cosmos-sdk/simapp %s %s TestFullAppSimulation;",
+			logObjKey, jobs, seeds, token, channel, timeStamp, blocks, period)
+	}
 	return fmt.Sprintf("runsim -log \"%s\" -j %d -seeds \"%s\" -slack \"%s,%s,%s\" github.com/cosmos/cosmos-sdk/simapp %s %s TestFullAppSimulation;",
 		logObjKey, jobs, seeds, token, channel, timeStamp, blocks, period)
 }
@@ -87,6 +93,7 @@ func main() {
 	flag.StringVar(&simPeriod, "p", "", "Simulation invariant check period")
 	flag.StringVar(&gitRevision, "g", "", "The git revision on which the simulation is run")
 	flag.BoolVar(&notifyOnly, "notify", false, "Send notification and exit")
+	flag.BoolVar(&genesis, "gen", false, "Use genesis file in simulation")
 	flag.Usage = func() {
 		_, _ = fmt.Fprintf(flag.CommandLine.Output(),
 			`Usage: %s [-s slacktoken] [-c channelID] [-b numblocks] [-p simperiod] [-g gitrevision]`, filepath.Base(os.Args[0]))
@@ -133,7 +140,8 @@ func main() {
 		userData.WriteString("#!/bin/bash \n")
 		userData.WriteString("cd /home/ec2-user/go/src/github.com/cosmos/cosmos-sdk \n")
 		userData.WriteString("source /etc/profile.d/set_env.sh \n")
-		userData.WriteString(buildCommand(numJobs, logObjKey, seeds[rng], slackToken, channelID, messageTS, numBlocks, simPeriod))
+		userData.WriteString(buildCommand(numJobs, logObjKey, seeds[rng], slackToken, channelID, messageTS, numBlocks, simPeriod, genesis))
+
 		userData.WriteString("shutdown -h now")
 
 		config := &ec2.RunInstancesInput{

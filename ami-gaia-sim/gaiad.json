@@ -46,6 +46,11 @@
       "destination": "/tmp/set_env.sh"
     },
     {
+      "type": "file",
+      "source": "genesis.json",
+      "destination": "/tmp/genesis.json"
+    },
+    {
       "type": "shell",
       "script": "install_gaiad.sh",
       "environment_vars": [
