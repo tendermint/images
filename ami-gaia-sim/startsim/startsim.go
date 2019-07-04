@@ -4,10 +4,6 @@ import (
 	"encoding/base64"
 	"flag"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"log"
 	"math"
 	"os"
@@ -15,25 +11,30 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ec2"
 )
 
 const (
-	numSeeds = 70
 	// If the number of jobs is < the number of seeds, simulation will crash
+	numSeeds                  = 36
 	numJobs                   = numSeeds
 	instanceShutdownBehaviour = "stop"
 )
 
 var (
-	channelID    string
-	slackToken   string
-	numBlocks    string
-	simPeriod    string
-	gitRevision  string
-	messageTS    string
-	logObjKey    string
-	slackErr     error
-	notifyOnly   bool
+	channelID   string
+	slackToken  string
+	numBlocks   string
+	simPeriod   string
+	gitRevision string
+	messageTS   string
+	logObjKey   string
+	slackErr    error
+	notifyOnly  bool
 )
 
 func makeRanges() map[int]string {
@@ -115,13 +116,9 @@ func main() {
 	amiId, err := getAmiId(gitRevision, svc)
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok {
-			switch awsErr.Code() {
-			default:
-				log.Fatal(awsErr.Error())
-			}
-		} else {
-			log.Fatal(err.Error())
+			log.Fatal(awsErr.Error())
 		}
+		log.Fatal(err.Error())
 	}
 
 	logObjKey = fmt.Sprintf("%s/%s", gitRevision, time.Now().Format("01-02-2006_150505"))
@@ -157,4 +154,5 @@ func main() {
 			log.Println(*result.Instances[i].InstanceId)
 		}
 	}
+	sendSqsMsg(seeds)
 }

@@ -14,7 +14,7 @@ make tools
 
 cd ${GOPATH}/src/github.com/cosmos
 git clone https://github.com/cosmos/tools
-cd tools && git checkout master
+cd tools && git checkout mircea/runsim-upgrades
 go install ./cmd/runsim
 
 sudo mv /home/ec2-user/go/bin/runsim /usr/bin/runsim
