@@ -10,6 +10,11 @@ mkdir -p ${GOPATH}/src/github.com/cosmos
 cd ${GOPATH}/src/github.com/cosmos
 git clone https://github.com/cosmos/cosmos-sdk
 cd cosmos-sdk && git checkout ${GAIA_COMMIT_HASH}
-make runsim tools
+make tools
+
+cd ${GOPATH}/src/github.com/cosmos
+git clone https://github.com/cosmos/tools
+cd tools && git checkout mircea/runsim-upgrades
+go install ./cmd/runsim
 
 sudo mv /home/ec2-user/go/bin/runsim /usr/bin/runsim

@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
+
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -30,6 +32,9 @@ var (
 	numBlocks   string
 	simPeriod   string
 	gitRevision string
+	messageTS   string
+	logObjKey   string
+	slackErr    error
 	notifyOnly  bool
 )
 
@@ -71,9 +76,9 @@ func getAmiId(gitRevision string, svc *ec2.EC2) (string, error) {
 	return *result.Images[0].ImageId, nil
 }
 
-func buildCommand(jobs int, seeds, token, channel, timeStamp, blocks, period string) string {
-	return fmt.Sprintf("runsim -e -j %d -seeds \"%s\" -slack \"%s,%s,%s\" github.com/cosmos/cosmos-sdk/simapp %s %s TestFullAppSimulation;",
-		jobs, seeds, token, channel, timeStamp, blocks, period)
+func buildCommand(jobs int, logObjKey, seeds, token, channel, timeStamp, blocks, period string) string {
+	return fmt.Sprintf("runsim -log \"%s\" -j %d -seeds \"%s\" -slack \"%s,%s,%s\" github.com/cosmos/cosmos-sdk/simapp %s %s TestFullAppSimulation;",
+		logObjKey, jobs, seeds, token, channel, timeStamp, blocks, period)
 }
 
 func main() {
@@ -90,15 +95,22 @@ func main() {
 	flag.Parse()
 
 	if notifyOnly {
-		_, err := slackMessage(slackToken, channelID, nil,
-			fmt.Sprintf("Starting simulation AMI build. Git rev/hash/branch/tag: `%s`", gitRevision))
+		msgTS, err := slackMessage(slackToken, channelID, nil,
+			fmt.Sprintf("*Starting simulation #%s.* SDK hash/tag/branch: `%s`. <%s|Circle build url>\nblocks:\t`%s`\nperiod:\t`%s`\nseeds:\t`%d`",
+				os.Getenv("CIRCLE_BUILD_NUM"), gitRevision, os.Getenv("CIRCLE_BUILD_URL"), numBlocks, simPeriod, numSeeds))
+
 		if err != nil {
 			log.Printf("ERROR: sending slack message: %v", err)
 		}
+
+		// DO NOT REMOVE. This output is used by other tools that run after this one.
+		fmt.Println(msgTS)
+
 		os.Exit(0)
 	}
 
-	msgTS, slackErr := slackMessage(slackToken, channelID, nil, "Spinning up simulation environments!")
+	messageTS = os.Getenv("MSGTS")
+	_, slackErr = slackMessage(slackToken, channelID, &messageTS, "Spinning up simulation environments!")
 	if slackErr != nil {
 		log.Fatal("Could not report back to slack: " + slackErr.Error())
 	}
@@ -110,24 +122,21 @@ func main() {
 	amiId, err := getAmiId(gitRevision, svc)
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok {
-			switch awsErr.Code() {
-			default:
-				log.Fatal(awsErr.Error())
-			}
-		} else {
-			log.Fatal(err.Error())
+			log.Fatal(awsErr.Error())
 		}
+		log.Fatal(err.Error())
 	}
 
+	logObjKey = fmt.Sprintf("%s/%s", gitRevision, time.Now().Format("01-02-2006_150505"))
 	seeds := makeRanges()
 	for rng := range seeds {
-		log.Println(buildCommand(numJobs, seeds[rng], slackToken, channelID, msgTS, numBlocks, simPeriod))
 
 		var userData strings.Builder
 		userData.WriteString("#!/bin/bash \n")
 		userData.WriteString("cd /home/ec2-user/go/src/github.com/cosmos/cosmos-sdk \n")
 		userData.WriteString("source /etc/profile.d/set_env.sh \n")
-		userData.WriteString(buildCommand(numJobs, seeds[rng], slackToken, channelID, msgTS, numBlocks, simPeriod))
+		userData.WriteString(buildCommand(numJobs, logObjKey, seeds[rng], slackToken, channelID, messageTS, numBlocks, simPeriod))
+
 		userData.WriteString("shutdown -h now")
 
 		config := &ec2.RunInstancesInput{
@@ -138,7 +147,10 @@ func main() {
 			MaxCount:                          aws.Int64(1),
 			MinCount:                          aws.Int64(1),
 			UserData:                          aws.String(base64.StdEncoding.EncodeToString([]byte(userData.String()))),
-		}
+
+			IamInstanceProfile: &ec2.IamInstanceProfileSpecification{
+				Name: aws.String("gaia-simulation"),
+			}}
 		result, err := svc.RunInstances(config)
 		if err != nil {
 			log.Fatal(err.Error())
@@ -148,4 +160,5 @@ func main() {
 			log.Println(*result.Instances[i].InstanceId)
 		}
 	}
+	sendSqsMsg(seeds)
 }
