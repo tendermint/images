@@ -95,11 +95,16 @@ func main() {
 
 	if notifyOnly {
 		msgTS, err := slackMessage(slackToken, channelID, nil,
-			fmt.Sprintf("Starting simulation AMI build. Git rev/hash/branch/tag: `%s`", gitRevision))
-		fmt.Println(msgTS)
+			fmt.Sprintf("*Starting simulation #%s.* SDK hash/tag/branch: `%s`. <%s|Circle build url>\nblocks:\t`%s`\nperiod:\t`%s`\nseeds:\t`%d`",
+				os.Getenv("CIRCLE_BUILD_NUM"), gitRevision, os.Getenv("CIRCLE_BUILD_URL"), numBlocks, simPeriod, numSeeds))
+
 		if err != nil {
 			log.Printf("ERROR: sending slack message: %v", err)
 		}
+
+		// DO NOT REMOVE. This output is used by other tools that run after this one.
+		fmt.Println(msgTS)
+
 		os.Exit(0)
 	}
 
@@ -124,8 +129,6 @@ func main() {
 	logObjKey = fmt.Sprintf("%s/%s", gitRevision, time.Now().Format("01-02-2006_150505"))
 	seeds := makeRanges()
 	for rng := range seeds {
-		log.Println(buildCommand(numJobs, logObjKey, seeds[rng], slackToken, channelID, messageTS, numBlocks, simPeriod))
-
 		var userData strings.Builder
 		userData.WriteString("#!/bin/bash \n")
 		userData.WriteString("cd /home/ec2-user/go/src/github.com/cosmos/cosmos-sdk \n")

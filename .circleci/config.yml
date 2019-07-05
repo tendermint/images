@@ -42,11 +42,11 @@ jobs:
             if [[ "${CIRCLE_BRANCH}" == "master" ]]; then
               export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_DEV
               export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_DEV
-              export MSGTS=`startsim -notify -s ${SLACK_TOKEN_DEV} -c ${SLACK_CHANNEL_ID_DEV} -g ${GAIA_COMMIT_HASH}`
+              export MSGTS=`startsim -notify -b ${BLOCKS} -p ${PERIOD} -s ${SLACK_TOKEN_DEV} -c ${SLACK_CHANNEL_ID_DEV} -g ${GAIA_COMMIT_HASH}`
             else
               export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_PROD
               export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_PROD
-              export MSGTS=`startsim -notify -s ${SLACK_TOKEN_PROD} -c ${SLACK_CHANNEL_ID_PROD} -g ${GAIA_COMMIT_HASH}`
+              export MSGTS=`startsim -notify -b ${BLOCKS} -p ${PERIOD} -s ${SLACK_TOKEN_PROD} -c ${SLACK_CHANNEL_ID_PROD} -g ${GAIA_COMMIT_HASH}`
             fi
 
             packer validate *.json
