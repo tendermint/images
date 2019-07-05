@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -19,10 +20,10 @@ import (
 )
 
 const (
+	numSeeds = 384
 	// If the number of jobs is < the number of seeds, simulation will crash
-	numSeeds                  = 36
 	numJobs                   = numSeeds
-	instanceShutdownBehaviour = "stop"
+	instanceShutdownBehaviour = "terminate"
 )
 
 var (
@@ -129,11 +130,13 @@ func main() {
 	logObjKey = fmt.Sprintf("%s/%s", gitRevision, time.Now().Format("01-02-2006_150505"))
 	seeds := makeRanges()
 	for rng := range seeds {
+
 		var userData strings.Builder
 		userData.WriteString("#!/bin/bash \n")
 		userData.WriteString("cd /home/ec2-user/go/src/github.com/cosmos/cosmos-sdk \n")
 		userData.WriteString("source /etc/profile.d/set_env.sh \n")
 		userData.WriteString(buildCommand(numJobs, logObjKey, seeds[rng], slackToken, channelID, messageTS, numBlocks, simPeriod))
+
 		userData.WriteString("shutdown -h now")
 
 		config := &ec2.RunInstancesInput{
