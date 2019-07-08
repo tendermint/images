@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -19,9 +20,9 @@ import (
 
 const (
 	// If the number of jobs is < the number of seeds, simulation will crash
-	numSeeds                  = 4
+	numSeeds                  = 384
 	numJobs                   = numSeeds
-	instanceShutdownBehaviour = "stop"
+	instanceShutdownBehaviour = "terminate"
 )
 
 var (
@@ -139,7 +140,6 @@ func main() {
 		userData.WriteString("cd /home/ec2-user/go/src/github.com/cosmos/cosmos-sdk \n")
 		userData.WriteString("source /etc/profile.d/set_env.sh \n")
 		userData.WriteString(buildCommand(numJobs, logObjPrefix, seeds[rng], slackToken, channelID, messageTS, numBlocks, simPeriod, genesis))
-
 		userData.WriteString("shutdown -h now")
 
 		config := &ec2.RunInstancesInput{
