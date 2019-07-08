@@ -49,8 +49,8 @@ jobs:
               export MSGTS=`startsim -notify -b ${BLOCKS} -p ${PERIOD} -s ${SLACK_TOKEN_PROD} -c ${SLACK_CHANNEL_ID_PROD} -g ${GAIA_COMMIT_HASH}`
             fi
 
-            #packer validate gaiad.json
-            #packer build gaiad.json
+            packer validate gaiad.json
+            packer build gaiad.json
 
             if [[ "${CIRCLE_BRANCH}" == "master" ]]; then
               if [[ "${GENESIS}" == "true" ]]; then
