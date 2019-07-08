@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"strings"
 
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -20,25 +19,14 @@ import (
 
 const (
 	// If the number of jobs is < the number of seeds, simulation will crash
-	numSeeds                  = 384
+	numSeeds                  = 900
 	numJobs                   = numSeeds
 	instanceShutdownBehaviour = "terminate"
 )
 
-var (
-	channelID    string
-	slackToken   string
-	numBlocks    string
-	simPeriod    string
-	gitRevision  string
-	messageTS    string
-	logObjPrefix string
-	err          error
-	notifyOnly   bool
-	genesis      bool
-)
+var err error
 
-func makeRanges() map[int]string {
+func makeSeedLists() map[int]string {
 	machines := make(map[int]string)
 	var str strings.Builder
 	index := 0
@@ -50,7 +38,6 @@ func makeRanges() map[int]string {
 		}
 		str.WriteString(strconv.Itoa(i) + ",")
 	}
-
 	if str.String() != "" {
 		machines[index] = strings.TrimRight(str.String(), ",")
 	}
@@ -59,7 +46,6 @@ func makeRanges() map[int]string {
 
 func getAmiId(gitRevision string, svc *ec2.EC2) (string, error) {
 	var imageID *ec2.DescribeImagesOutput
-
 	input := &ec2.DescribeImagesInput{
 		Filters: []*ec2.Filter{
 			{
@@ -87,6 +73,24 @@ func buildCommand(jobs int, logObjKey, seeds, token, channel, timeStamp, blocks,
 }
 
 func main() {
+	var (
+		amiID         string
+		channelID     string
+		slackToken    string
+		numBlocks     string
+		simPeriod     string
+		gitRevision   string
+		messageTS     string
+		logObjPrefix  string
+		instanceIndex []int
+		notifyOnly    bool
+		genesis       bool
+		sessionEC2    = ec2.New(session.Must(session.NewSession(&aws.Config{
+			Region: aws.String("us-east-1"),
+		})))
+		ec2Instances *ec2.Reservation
+	)
+
 	flag.StringVar(&slackToken, "s", "", "Slack token")
 	flag.StringVar(&channelID, "c", "", "Slack channel ID")
 	flag.StringVar(&numBlocks, "b", "", "Number of blocks to simulate")
@@ -109,61 +113,63 @@ func main() {
 			log.Printf("ERROR: sending slack message: %v", err)
 		}
 
-		// DO NOT REMOVE. This output is used by other tools that run after this one.
+		// DO NOT REMOVE. Using this output to set an environment variable
+		// Env variable will be used by subsequent runs of startsim
 		fmt.Println(msgTS)
 		os.Exit(0)
 	}
 
 	messageTS = os.Getenv("MSGTS")
-	_, err = slackMessage(slackToken, channelID, &messageTS, "Spinning up simulation environments!")
-	if err != nil {
+	if _, err = slackMessage(slackToken, channelID, &messageTS, "Spinning up simulation environments!"); err != nil {
 		log.Fatal("Could not report back to slack: " + err.Error())
 	}
 
-	svc := ec2.New(session.Must(session.NewSession(&aws.Config{
-		Region: aws.String("us-east-1"),
-	})))
-
-	amiId, err := getAmiId(gitRevision, svc)
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			log.Fatal(awsErr.Error())
-		}
+	if amiID, err = getAmiId(gitRevision, sessionEC2); err != nil {
 		log.Fatal(err.Error())
 	}
 
 	logObjPrefix = fmt.Sprintf("simID-%s", os.Getenv("CIRCLE_BUILD_NUM"))
-	seeds := makeRanges()
-	for rng := range seeds {
+	seedLists := makeSeedLists()
+	for index := range seedLists {
 		var userData strings.Builder
 		userData.WriteString("#!/bin/bash \n")
 		userData.WriteString("cd /home/ec2-user/go/src/github.com/cosmos/cosmos-sdk \n")
 		userData.WriteString("source /etc/profile.d/set_env.sh \n")
-		userData.WriteString(buildCommand(numJobs, logObjPrefix, seeds[rng], slackToken, channelID, messageTS, numBlocks, simPeriod, genesis))
+		userData.WriteString(buildCommand(numJobs, logObjPrefix, seedLists[index], slackToken, channelID, messageTS, numBlocks, simPeriod, genesis))
 		userData.WriteString("shutdown -h now")
 
 		config := &ec2.RunInstancesInput{
 			InstanceInitiatedShutdownBehavior: aws.String(instanceShutdownBehaviour),
 			InstanceType:                      aws.String("c4.8xlarge"),
-			ImageId:                           aws.String(amiId),
+			ImageId:                           aws.String(amiID),
 			KeyName:                           aws.String("wallet-nodes"),
 			MaxCount:                          aws.Int64(1),
 			MinCount:                          aws.Int64(1),
 			UserData:                          aws.String(base64.StdEncoding.EncodeToString([]byte(userData.String()))),
-
 			IamInstanceProfile: &ec2.IamInstanceProfileSpecification{
 				Name: aws.String("gaia-simulation"),
 			}}
-		result, err := svc.RunInstances(config)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
 
-		for i := range result.Instances {
-			log.Println(*result.Instances[i].InstanceId)
+		if ec2Instances, err = sessionEC2.RunInstances(config); err != nil {
+			// Checking aws error code to see if we have reached the EC2 instance limit for this instance type
+			// Crashing out of the program is not desirable. We can run simulation with a lower number of seeds
+			if awsErr, ok := err.(awserr.Error); ok {
+				if awsErr.Code() == "InstanceLimitExceeded" {
+					log.Println(awsErr.Error())
+					break
+				} else {
+					log.Fatal(awsErr.Error())
+				}
+			} else {
+				log.Fatal(err.Error())
+			}
 		}
+		for i := range ec2Instances.Instances {
+			log.Println(*ec2Instances.Instances[i].InstanceId)
+		}
+		instanceIndex = append(instanceIndex, index)
 	}
-	if len(seeds) > 1 {
-		sendSqsMsg(seeds)
+	if len(instanceIndex) > 1 {
+		sendSqsMsg(instanceIndex)
 	}
 }

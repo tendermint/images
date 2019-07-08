@@ -1,13 +1,13 @@
 package main
 
 import (
-	"fmt"
+	"log"
+	"sort"
+	"strconv"
+
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"log"
-	"strconv"
 )
 
 const (
@@ -15,47 +15,63 @@ const (
 	queueNamePrefix = "gaia-sim-"
 )
 
-func awsErrHandler(err error) {
-	if awsErr, ok := err.(awserr.Error); ok {
-		log.Fatal(awsErr.Error())
-	}
-	log.Fatal(err.Error())
-}
-
-func sendSqsMsg(seeds map[int]string) {
-	maxMessages := 0
-	batchRequestEntries := make([]*sqs.SendMessageBatchRequestEntry, len(seeds)-1)
-	sqsSvc := sqs.New(session.Must(session.NewSession(&aws.Config{
+var (
+	sessionSQS = sqs.New(session.Must(session.NewSession(&aws.Config{
 		Region: aws.String(awsRegion),
 	})))
+)
 
-	queues, err := sqsSvc.ListQueues(&sqs.ListQueuesInput{
-		QueueNamePrefix: aws.String(queueNamePrefix),
-	})
-	if err != nil {
-		awsErrHandler(err)
+func sendBatch(batchRequestEntries []*sqs.SendMessageBatchRequestEntry, queues *sqs.ListQueuesOutput) {
+	if _, err = sessionSQS.SendMessageBatch(&sqs.SendMessageBatchInput{
+		Entries:  batchRequestEntries,
+		QueueUrl: queues.QueueUrls[0],
+	}); err != nil {
+		log.Printf(err.Error())
 	}
-	for index := range seeds {
-		maxMessages++
-		batchRequestEntries[index] = &sqs.SendMessageBatchRequestEntry{
+}
+
+func removeEmpties(batch []*sqs.SendMessageBatchRequestEntry) []*sqs.SendMessageBatchRequestEntry {
+	var newBatch []*sqs.SendMessageBatchRequestEntry
+	for _, msg := range batch {
+		if msg != nil {
+			newBatch = append(newBatch, msg)
+		}
+	}
+	return newBatch
+}
+
+func sendSqsMsg(instanceIndex []int) {
+	var (
+		maxMessages         = 0
+		batchRequestEntries = make([]*sqs.SendMessageBatchRequestEntry, 10)
+		queues              *sqs.ListQueuesOutput
+	)
+
+	if queues, err = sessionSQS.ListQueues(&sqs.ListQueuesInput{
+		QueueNamePrefix: aws.String(queueNamePrefix),
+	}); err != nil {
+		log.Fatal(err.Error())
+	}
+	sort.Ints(instanceIndex)
+	for index := range instanceIndex {
+		batchRequestEntries[maxMessages] = &sqs.SendMessageBatchRequestEntry{
 			Id:          aws.String(strconv.Itoa(index)),
-			MessageBody: aws.String("tick"), // Required field, we don't care about the body right now
+			MessageBody: aws.String("Instance " + strconv.Itoa(index)), // Required field, we don't care about the body right now
 		}
-		if maxMessages == 10 || maxMessages >= len(seeds)-1 {
-			_, err := sqsSvc.SendMessageBatch(&sqs.SendMessageBatchInput{
-				Entries:  batchRequestEntries,
-				QueueUrl: queues.QueueUrls[0],
-			})
-			if err != nil {
-				awsErrHandler(err)
-			}
+		maxMessages++
+		// SQS only accepts batches of max 10 messages
+		if maxMessages == 10 {
+			sendBatch(batchRequestEntries, queues)
+			batchRequestEntries = make([]*sqs.SendMessageBatchRequestEntry, 10)
 			maxMessages = 0
-			batchRequestEntries = batchRequestEntries[:0]
 		}
-		if index == len(batchRequestEntries) {
-			fmt.Printf("%d", index)
+		// We want the queue length to be one less than the number of instances that were created
+		// An empty queue will prompt the last running instance to send the simulation finished message
+		if index == len(instanceIndex)-2 {
+			// Can't have nil elements in the list or the sqs send function will segfault
+			batchRequestEntries = removeEmpties(batchRequestEntries)
+			sendBatch(batchRequestEntries, queues)
 			break
 		}
-
 	}
 }
