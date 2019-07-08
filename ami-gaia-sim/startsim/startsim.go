@@ -165,5 +165,7 @@ func main() {
 			log.Println(*result.Instances[i].InstanceId)
 		}
 	}
-	sendSqsMsg(seeds)
+	if len(seeds) > 1 {
+		sendSqsMsg(seeds)
+	}
 }
