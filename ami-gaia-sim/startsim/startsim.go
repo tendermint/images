@@ -82,7 +82,7 @@ func main() {
 		gitRevision   string
 		messageTS     string
 		logObjPrefix  string
-		instanceIndex []int
+		msgQueueIndex []int
 		notifyOnly    bool
 		genesis       bool
 		sessionEC2    = ec2.New(session.Must(session.NewSession(&aws.Config{
@@ -131,6 +131,7 @@ func main() {
 	logObjPrefix = fmt.Sprintf("simID-%s", os.Getenv("CIRCLE_BUILD_NUM"))
 	seedLists := makeSeedLists()
 	for index := range seedLists {
+		// Dragons
 		var userData strings.Builder
 		userData.WriteString("#!/bin/bash \n")
 		userData.WriteString("cd /home/ec2-user/go/src/github.com/cosmos/cosmos-sdk \n")
@@ -167,9 +168,9 @@ func main() {
 		for i := range ec2Instances.Instances {
 			log.Println(*ec2Instances.Instances[i].InstanceId)
 		}
-		instanceIndex = append(instanceIndex, index)
+		msgQueueIndex = append(msgQueueIndex, index)
 	}
-	if len(instanceIndex) > 1 {
-		sendSqsMsg(instanceIndex)
+	if len(msgQueueIndex) > 1 {
+		sendSqsMsg(msgQueueIndex)
 	}
 }
