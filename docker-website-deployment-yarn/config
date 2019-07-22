@@ -1,2 +1,0 @@
-[profile terraform]
-credential_source = Environment

@@ -14,35 +14,43 @@ build-docker: &build-docker
       docker build -t tendermintdev/${CIRCLE_BRANCH} .
       docker push tendermintdev/${CIRCLE_BRANCH}
 
-build-ami-validate: &build-ami-validate
-  run:
-    name: "Validate packer template"
-    command: |
-      cd ${CIRCLE_BRANCH}
-      packer validate *.json
-
-build-ami: &build-ami
-  run:
-    name: "Build AMI"
-    command: |
-      cd ${CIRCLE_BRANCH}
-      packer build *.json
-
-run-sim: &run-sim
-  run:
-    name: "Run simulation"
-    command: |
-      cd ${CIRCLE_BRANCH}
-      go run start_sim.go ${BLOCKS} ${PERIOD} ${GAIA_COMMIT_HASH} ${SLACK_CHANNEL_ID} ${SLACK_TOKEN}
-
 jobs:
   build:
     <<: *packer
     steps:
       - checkout
-      - *build-ami-validate
-      - *build-ami
-      - *run-sim
+      - run:
+          name: "Run simulation"
+          command: |
+            cd ami-gaia-sim
+            go install github.com/cosmos/tools/cmd/runsim/execmgmt
+
+            if [[ "${CIRCLE_BRANCH}" == "master" ]]; then
+              export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_DEV
+              export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_DEV
+              export MSGTS=`execmgmt -notify -b ${BLOCKS} -p ${PERIOD} -s ${SLACK_TOKEN_DEV} -c ${SLACK_CHANNEL_ID_DEV} -g ${GAIA_COMMIT_HASH}`
+            else
+              export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_PROD
+              export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_PROD
+              export MSGTS=`execmgmt -notify -b ${BLOCKS} -p ${PERIOD} -s ${SLACK_TOKEN_PROD} -c ${SLACK_CHANNEL_ID_PROD} -g ${GAIA_COMMIT_HASH}`
+            fi
+
+            packer validate gaiad.json
+            packer build gaiad.json
+
+            if [[ "${CIRCLE_BRANCH}" == "master" ]]; then
+              if [[ "${GENESIS}" == "true" ]]; then
+                execmgmt -gen -b ${BLOCKS} -p ${PERIOD} -g ${GAIA_COMMIT_HASH} -c ${SLACK_CHANNEL_ID_DEV} -s ${SLACK_TOKEN_DEV}
+              else
+                execmgmt -b ${BLOCKS} -p ${PERIOD} -g ${GAIA_COMMIT_HASH} -c ${SLACK_CHANNEL_ID_DEV} -s ${SLACK_TOKEN_DEV}
+              fi
+            else
+              if [[ "${GENESIS}" == "true" ]]; then
+                execmgmt -gen -b ${BLOCKS} -p ${PERIOD} -g ${GAIA_COMMIT_HASH} -c ${SLACK_CHANNEL_ID_PROD} -s ${SLACK_TOKEN_PROD}
+              else
+                execmgmt -b ${BLOCKS} -p ${PERIOD} -g ${GAIA_COMMIT_HASH} -c ${SLACK_CHANNEL_ID_PROD} -s ${SLACK_TOKEN_PROD}
+              fi
+            fi
 
   docker-hashicorp-go:
     machine: true
@@ -86,7 +94,7 @@ workflows:
       - website-deployment-yarn:
           filters:
             branches:
-              only: docker-website-deployment-yarn
+              only: docker-website-deployment
 
       - terragrunt:
           filters:

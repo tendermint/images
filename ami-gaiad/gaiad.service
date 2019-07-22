@@ -5,8 +5,8 @@ After=network-online.target
 
 [Service]
 Type=exec
-User=centos
-Group=centos
+User=ec2-user
+Group=ec2-user
 Restart=on-failure
 PermissionsStartOnly=true
 ExecStartPre=-/usr/bin/mount_ebs.sh
