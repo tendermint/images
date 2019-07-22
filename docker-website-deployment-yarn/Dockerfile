@@ -1,9 +1,9 @@
-FROM alpine:3.8
+FROM alpine:3.10
 
 COPY config /root/.aws/
 
 RUN apk update && apk upgrade
-RUN apk --no-cache add bash curl openssh git unzip jq python3 outils-cksum && \
+RUN apk --no-cache add bash curl openssh git unzip jq python3 outils-cksum yarn && \
     python3 -m ensurepip && \
     rm -r /usr/lib/python*/ensurepip && \
     pip3 install --upgrade pip setuptools && \
