@@ -10,7 +10,7 @@ RUN apk --no-cache add bash curl openssh git unzip jq python3 outils-cksum yarn 
     if [ ! -e /usr/bin/pip ]; then ln -s pip3 /usr/bin/pip ; fi && \
     if [[ ! -e /usr/bin/python ]]; then ln -sf /usr/bin/python3 /usr/bin/python; fi && \
     pip install awscli --upgrade && \
-    chmod 644 /root/.ssh/known_hosts && \
+    touch /root/.ssh/known_hosts && chmod 644 /root/.ssh/known_hosts && \
     rm -r /root/.cache
 
 CMD ["/bin/bash"]
