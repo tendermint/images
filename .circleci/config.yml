@@ -14,20 +14,6 @@ build-docker: &build-docker
       docker build -t tendermintdev/${CIRCLE_BRANCH} .
       docker push tendermintdev/${CIRCLE_BRANCH}
 
-build-ami-validate: &build-ami-validate
-  run:
-    name: "Validate packer template"
-    command: |
-      cd ${CIRCLE_BRANCH}
-      packer validate *.json
-
-build-ami: &build-ami
-  run:
-    name: "Build AMI"
-    command: |
-      cd ${CIRCLE_BRANCH}
-      packer build *.json
-
 jobs:
   build:
     <<: *packer
@@ -108,7 +94,7 @@ workflows:
       - website-deployment-yarn:
           filters:
             branches:
-              only: docker-website-deployment-yarn
+              only: docker-website-deployment
 
       - terragrunt:
           filters:
