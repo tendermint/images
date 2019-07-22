@@ -1,6 +1,7 @@
 {
   "variables": {
     "gaia_commit_hash": "{{ env `GAIA_COMMIT_HASH` }}",
+    "runsim_commit_hash": "{{ env `RUNSIM_COMMIT_HASH` }}",
     "go_tarball_file_name": "go1.12.2.linux-amd64.tar.gz"
   },
   "builders": [
@@ -42,24 +43,20 @@
     },
     {
       "type": "file",
-      "source": "files/multisim.sh",
-      "destination": "/tmp/multisim.sh"
-    },
-    {
-      "type": "file",
-      "source": "files/notify_slack.go",
-      "destination": "/tmp/notify_slack.go"
-    },
-    {
-      "type": "file",
-      "source": "files/set_env.sh",
+      "source": "set_env.sh",
       "destination": "/tmp/set_env.sh"
     },
     {
+      "type": "file",
+      "source": "genesis.json",
+      "destination": "/tmp/genesis.json"
+    },
+    {
       "type": "shell",
-      "script": "files/install_gaiad.sh",
+      "script": "install_gaiad.sh",
       "environment_vars": [
-        "GAIA_COMMIT_HASH={{ user `gaia_commit_hash` }}"
+        "GAIA_COMMIT_HASH={{ user `gaia_commit_hash` }}",
+        "RUNSIM_COMMIT_HASH={{ user `runsim_commit_hash` }}"
       ]
     }
   ]
