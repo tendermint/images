@@ -1,6 +1,7 @@
 {
   "variables": {
     "gaia_commit_hash": "{{ env `GAIA_COMMIT_HASH` }}",
+    "runsim_commit_hash": "{{ env `RUNSIM_COMMIT_HASH` }}",
     "go_tarball_file_name": "go1.12.2.linux-amd64.tar.gz"
   },
   "builders": [
@@ -54,7 +55,8 @@
       "type": "shell",
       "script": "install_gaiad.sh",
       "environment_vars": [
-        "GAIA_COMMIT_HASH={{ user `gaia_commit_hash` }}"
+        "GAIA_COMMIT_HASH={{ user `gaia_commit_hash` }}",
+        "RUNSIM_COMMIT_HASH={{ user `runsim_commit_hash` }}"
       ]
     }
   ]

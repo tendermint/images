@@ -12,5 +12,9 @@ git clone https://github.com/cosmos/cosmos-sdk
 cd cosmos-sdk && git checkout ${GAIA_COMMIT_HASH}
 make build
 
-go install github.com/cosmos/tools/cmd/runsim
+cd ${GOPATH}/src/github.com/cosmos
+git clone https://github.com/cosmos/tools
+cd tools && git checkout ${RUNSIM_COMMIT_HASH}
+go install ./cmd/runsim
+
 sudo mv /home/ec2-user/go/bin/runsim /usr/bin/runsim
