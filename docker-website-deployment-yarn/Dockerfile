@@ -12,5 +12,5 @@ RUN apk --no-cache add bash curl openssh git unzip jq python3 outils-cksum yarn 
     pip install awscli --upgrade && \
     touch /root/.ssh/known_hosts && chmod 644 /root/.ssh/known_hosts && \
     rm -r /root/.cache
-
+    
 CMD ["/bin/bash"]
