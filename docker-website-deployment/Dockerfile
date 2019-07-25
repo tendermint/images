@@ -1,4 +1,4 @@
-FROM alpine:3.10
+FROM golang:1.12.7-alpine:3.10
 
 COPY config /root/.aws/
 
