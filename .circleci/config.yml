@@ -1,22 +1,53 @@
-version: 2
+version: 2.1
 
-packer: &packer
-  docker:
-    - image: tendermintdev/docker-hashicorp-go:latest
-  working_directory: ~/packer
+executors:
+  packer:
+    docker:
+      - image: tendermintdev/docker-hashicorp-go:latest
 
-build-docker: &build-docker
-  run:
-    name: "Build docker image"
-    command: |
-      cd ${CIRCLE_BRANCH}
-      docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS
-      docker build -t tendermintdev/${CIRCLE_BRANCH} .
-      docker push tendermintdev/${CIRCLE_BRANCH}
+commands:
+  build-docker:
+    steps:
+      - run:
+          name: "Build docker image"
+          command: |
+            cd ${CIRCLE_BRANCH}
+            docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS
+            docker build -t tendermintdev/${CIRCLE_BRANCH} .
+            docker push tendermintdev/${CIRCLE_BRANCH}
+
+  get-execmgmt-dev:
+    steps:
+      - run:
+          name: "Install execmgmt"
+          command: |
+            git clone https://github.com/cosmos/tools.git
+            cd tools/cmd/runsim/execmgmt && checkout ${RUNSIM_COMMIT_HASH}
+            go install
+
+  build-gaia-sim-image:
+    steps:
+      - run:
+          name: "Build gaia sim AMI"
+          command: |
+            export MSGTS=`execmgmt -notify -b ${BLOCKS} -p ${PERIOD} -s ${SLACK_TOKEN} -c ${SLACK_CHANNEL_ID} -g ${GAIA_COMMIT_HASH}`
+            packer validate gaiad.json
+            packer build gaiad.json
+
+  run-sim:
+    steps:
+      - run:
+          name: "Run simulation"
+          command: |
+            if [[ "${GENESIS}" == "true" ]]; then
+              execmgmt -gen -b ${BLOCKS} -p ${PERIOD} -g ${GAIA_COMMIT_HASH} -c ${SLACK_CHANNEL_ID} -s ${SLACK_TOKEN}
+            else
+              execmgmt -b ${BLOCKS} -p ${PERIOD} -g ${GAIA_COMMIT_HASH} -c ${SLACK_CHANNEL_ID} -s ${SLACK_TOKEN}
+            fi
 
 jobs:
   build:
-    <<: *packer
+    executor: packer
     steps:
       - checkout
       - run:
@@ -52,35 +83,42 @@ jobs:
               fi
             fi
 
+  ami-gaia-sim:
+    executor: packer
+    steps:
+      - get-execmgmt-dev
+      - build-gaia-sim-image
+      - run-sim
+
   docker-hashicorp-go:
     machine: true
     steps:
       - checkout
-      - *build-docker
+      - build-docker
 
   iam-management:
     machine: true
     steps:
       - checkout
-      - *build-docker
+      - build-docker
 
   website-deployment-yarn:
     machine: true
     steps:
       - checkout
-      - *build-docker
+      - build-docker
 
   terragrunt:
     machine: true
     steps:
       - checkout
-      - *build-docker
+      - build-docker
 
   docs-deployment:
     machine: true
     steps:
       - checkout
-      - *build-docker
+      - build-docker
 
 workflows:
   version: 2
@@ -110,3 +148,11 @@ workflows:
           filters:
             branches:
               only: docker-hashicorp-go
+
+  run-gaia-sim:
+    jobs:
+      - ami-gaia-sim:
+          context: gaia-sim-dev
+          filters:
+            branches:
+              only: master
