@@ -22,7 +22,7 @@ commands:
           name: "Install execmgmt"
           command: |
             git clone https://github.com/cosmos/tools.git
-            cd tools/cmd/runsim/execmgmt && checkout ${RUNSIM_COMMIT_HASH}
+            cd tools/cmd/runsim/execmgmt && git checkout ${RUNSIM_COMMIT_HASH}
             go install
 
   build-gaia-sim-image:
