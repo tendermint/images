@@ -1,4 +1,9 @@
 version: 2.1
+parameters:
+  gaia-commit-hash:
+    type: string
+    default: "master"
+
 
 executors:
   packer:
@@ -31,6 +36,7 @@ commands:
           name: "Build gaia sim AMI"
           command: |
             export MSGTS=`execmgmt -notify -b ${BLOCKS} -p ${PERIOD} -s ${SLACK_TOKEN} -c ${SLACK_CHANNEL_ID} -g ${GAIA_COMMIT_HASH}`
+            cd ami-gaia-sim
             packer validate gaiad.json
             packer build gaiad.json
 
