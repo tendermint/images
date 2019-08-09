@@ -3,12 +3,26 @@ parameters:
   gaia-commit-hash:
     type: string
     default: "master"
+  blocks:
+    type: string
+    default: "100"
+  genesis:
+    type: string
+    default: "false"
+  check-id:
+    type: string
+    default: "0"
 
 
 executors:
   packer:
     docker:
       - image: tendermintdev/docker-hashicorp-go:latest
+    environment:
+      GAIA_COMMIT_HASH: << pipeline.parameters.gaia-commit-hash >>
+      BLOCKS: << pipeline.parameters.blocks >>
+      GENESISS: << pipeline.parameters.genesis >>
+      CHECK_ID: << pipeline.parameters.check-id >>
 
 commands:
   build-docker:
@@ -92,8 +106,8 @@ jobs:
   ami-gaia-sim:
     executor: packer
     steps:
-      - get-execmgmt-dev
       - checkout
+      - get-execmgmt-dev
       - build-gaia-sim-image
       - run-sim
 
