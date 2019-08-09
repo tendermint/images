@@ -93,6 +93,7 @@ jobs:
     executor: packer
     steps:
       - get-execmgmt-dev
+      - checkout
       - build-gaia-sim-image
       - run-sim
 
