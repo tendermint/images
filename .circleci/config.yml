@@ -1,5 +1,8 @@
 version: 2.1
 parameters:
+  runsim-commit-hash:
+    type: string
+    default: "master"
   gaia-commit-hash:
     type: string
     default: "master"
@@ -23,6 +26,7 @@ executors:
       BLOCKS: << pipeline.parameters.blocks >>
       GENESISS: << pipeline.parameters.genesis >>
       CHECK_ID: << pipeline.parameters.check-id >>
+      RUNSIM_COMMIT_HASH: << pipeline.parameters.runsim-commit-hash >>
 
 commands:
   build-docker:
@@ -49,7 +53,6 @@ commands:
       - run:
           name: "Build gaia sim AMI"
           command: |
-            export MSGTS=`execmgmt -notify -b ${BLOCKS} -p ${PERIOD} -s ${SLACK_TOKEN} -c ${SLACK_CHANNEL_ID} -g ${GAIA_COMMIT_HASH}`
             cd ami-gaia-sim
             packer validate gaiad.json
             packer build gaiad.json
@@ -59,6 +62,7 @@ commands:
       - run:
           name: "Run simulation"
           command: |
+            export MSGTS=`execmgmt -notify -b ${BLOCKS} -p ${PERIOD} -s ${SLACK_TOKEN} -c ${SLACK_CHANNEL_ID} -g ${GAIA_COMMIT_HASH}`
             if [[ "${GENESIS}" == "true" ]]; then
               execmgmt -gen -b ${BLOCKS} -p ${PERIOD} -g ${GAIA_COMMIT_HASH} -c ${SLACK_CHANNEL_ID} -s ${SLACK_TOKEN}
             else
@@ -103,7 +107,7 @@ jobs:
               fi
             fi
 
-  ami-gaia-sim:
+  ami-gaia-sim-dev:
     executor: packer
     steps:
       - checkout
@@ -172,7 +176,7 @@ workflows:
 
   run-gaia-sim:
     jobs:
-      - ami-gaia-sim:
+      - ami-gaia-sim-dev:
           context: gaia-sim-dev
           filters:
             branches:
