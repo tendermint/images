@@ -14,7 +14,7 @@ parameters:
     default: "false"
   check-id:
     type: string
-    default: "0"
+    default: ""
 
 
 executors:
@@ -27,6 +27,7 @@ executors:
       GENESISS: << pipeline.parameters.genesis >>
       CHECK_ID: << pipeline.parameters.check-id >>
       RUNSIM_COMMIT_HASH: << pipeline.parameters.runsim-commit-hash >>
+      AWS_REGION: us-east-1
 
 commands:
   build-docker:

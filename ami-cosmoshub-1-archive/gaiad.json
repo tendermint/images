@@ -1,0 +1,68 @@
+{
+  "variables": {
+    "gaiad_version": "tags/v0.33.2",
+    "go_tarball_file_name": "go1.12.5.linux-amd64.tar.gz"
+  },
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "region": "us-east-1",
+      "force_deregister": true,
+      "force_delete_snapshot": true,
+      "launch_block_device_mappings": [{
+        "device_name": "/dev/xvda",
+        "volume_size": 8,
+        "volume_type": "gp2",
+        "delete_on_termination": true
+      }],
+      "source_ami_filter": {
+        "filters": {
+          "virtualization-type": "hvm",
+          "name": "amzn2-ami-hvm-2.0*x86_64*",
+          "root-device-type": "ebs"
+        },
+        "owners": ["137112412989"],
+        "most_recent": true
+      },
+      "instance_type": "t2.xlarge",
+      "ssh_username": "ec2-user",
+      "ami_name": "tendermint-gaiad-{{ user `gaiad_version` }}"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "sleep 20",
+        "sudo yum -y update",
+        "sudo yum -y install make git gcc curl",
+        "curl -L -O https://dl.google.com/go/{{ user `go_tarball_file_name` }}",
+        "sudo tar -C /usr/local -xzf {{ user `go_tarball_file_name` }}",
+        "rm {{ user `go_tarball_file_name` }}"
+      ]
+    },
+    {
+      "type": "file",
+      "source": "mount_ebs.sh",
+      "destination": "/tmp/mount_ebs.sh"
+    },
+    {
+      "type": "file",
+      "source": "gaiad.service",
+      "destination": "/tmp/gaiad.service"
+    },
+    {
+      "type": "shell",
+      "script": "install_gaiad.sh",
+      "environment_vars": [
+        "GAIAD_VERSION={{ user `gaiad_version` }}"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "gaiad version --long"
+      ]
+    }
+  ]
+}
