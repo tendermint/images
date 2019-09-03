@@ -3,10 +3,7 @@ parameters:
   gaia-commit-hash:
     type: string
     default: "master"
-  github:
-    type: string
-    default: ""
-  slack:
+  integration-type:
     type: string
     default: ""
 
@@ -16,8 +13,7 @@ executors:
       - image: tendermintdev/docker-hashicorp-go:latest
     environment:
       GAIA_COMMIT_HASH: << pipeline.parameters.gaia-commit-hash >>
-      GITHUB: << pipeline.parameters.github >>
-      SLACK: << pipeline.parameters.slack >>
+      INTEGRATION: << pipeline.parameters.integration-type >>
       AWS_REGION: us-east-1
 
 commands:
