@@ -6,16 +6,15 @@ parameters:
   gaia-commit-hash:
     type: string
     default: "master"
-  blocks:
-    type: string
-    default: "100"
   genesis:
     type: string
     default: "false"
-  check-id:
+  github:
     type: string
     default: ""
-
+  slack:
+    type: string
+    default: ""
 
 executors:
   packer:
@@ -23,10 +22,11 @@ executors:
       - image: tendermintdev/docker-hashicorp-go:latest
     environment:
       GAIA_COMMIT_HASH: << pipeline.parameters.gaia-commit-hash >>
+      RUNSIM_COMMIT_HASH: << pipeline.parameters.runsim-commit-hash >>
       BLOCKS: << pipeline.parameters.blocks >>
       GENESISS: << pipeline.parameters.genesis >>
-      CHECK_ID: << pipeline.parameters.check-id >>
-      RUNSIM_COMMIT_HASH: << pipeline.parameters.runsim-commit-hash >>
+      GITHUB: << pipeline.parameters.github >>
+      SLACK: << pipeline.parameters.slack >>
       AWS_REGION: us-east-1
 
 commands:
@@ -49,21 +49,21 @@ jobs:
           name: "Build execmgmt tool"
           command: |
             git clone https://github.com/cosmos/tools.git
-            cd tools/cmd/runsim/execmgmt && git checkout ${RUNSIM_COMMIT_HASH}
+            cd tools/cmd/runsim/execmgmt || exit 1
+            git checkout ${RUNSIM_COMMIT_HASH}
             go install
       - run:
           name: "Build image and run sim"
           command: |
-            export MSGTS=`execmgmt -notify -b ${BLOCKS} -p ${PERIOD} -s ${SLACK_TOKEN} -c ${SLACK_CHANNEL_ID} -g ${GAIA_COMMIT_HASH}`
-
-            cd ami-gaia-sim
+            execmgmt -Notify
+            cd ami-gaia-sim || exit 1
             packer validate gaiad.json
             packer build gaiad.json
 
             if [[ "${GENESIS}" == "true" ]]; then
-              execmgmt -gen -b ${BLOCKS} -p ${PERIOD} -g ${GAIA_COMMIT_HASH} -c ${SLACK_CHANNEL_ID} -s ${SLACK_TOKEN}
+              execmgmt -Genesis
             else
-              execmgmt -b ${BLOCKS} -p ${PERIOD} -g ${GAIA_COMMIT_HASH} -c ${SLACK_CHANNEL_ID} -s ${SLACK_TOKEN}
+              execmgmt
             fi
 
   docker-hashicorp-go:

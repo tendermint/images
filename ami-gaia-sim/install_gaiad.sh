@@ -14,8 +14,9 @@ make build
 
 cd "${GOPATH}"/src/github.com/cosmos || exit 1
 git clone https://github.com/cosmos/tools
-cd tools && git checkout "${RUNSIM_COMMIT_HASH}"
-go install ./cmd/runsim
+cd tools/cmd/runsim || exit 1
+git checkout "${RUNSIM_COMMIT_HASH}"
+go install
 
 sudo mv /home/ec2-user/go/bin/runsim /usr/bin/runsim
 
