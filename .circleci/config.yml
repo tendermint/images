@@ -45,7 +45,6 @@ jobs:
             execmgmt -Notify
             cd ami-gaia-sim || exit 1
             packer validate gaiad.json
-            packer build gaiad.json
 
             if [[ "${GENESIS}" == "true" ]]; then
               execmgmt -Genesis
