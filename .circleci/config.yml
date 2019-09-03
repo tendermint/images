@@ -1,8 +1,5 @@
 version: 2.1
 parameters:
-  runsim-commit-hash:
-    type: string
-    default: "master"
   gaia-commit-hash:
     type: string
     default: "master"
@@ -19,7 +16,6 @@ executors:
       - image: tendermintdev/docker-hashicorp-go:latest
     environment:
       GAIA_COMMIT_HASH: << pipeline.parameters.gaia-commit-hash >>
-      RUNSIM_COMMIT_HASH: << pipeline.parameters.runsim-commit-hash >>
       GITHUB: << pipeline.parameters.github >>
       SLACK: << pipeline.parameters.slack >>
       AWS_REGION: us-east-1
