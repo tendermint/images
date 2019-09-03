@@ -23,7 +23,6 @@ executors:
     environment:
       GAIA_COMMIT_HASH: << pipeline.parameters.gaia-commit-hash >>
       RUNSIM_COMMIT_HASH: << pipeline.parameters.runsim-commit-hash >>
-      BLOCKS: << pipeline.parameters.blocks >>
       GENESISS: << pipeline.parameters.genesis >>
       GITHUB: << pipeline.parameters.github >>
       SLACK: << pipeline.parameters.slack >>
