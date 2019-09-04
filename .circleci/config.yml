@@ -5,7 +5,7 @@ parameters:
     default: "master"
   integration-type:
     type: string
-    default: ""
+    default: "CI"
   blocks:
     type: string
     default: "50"
