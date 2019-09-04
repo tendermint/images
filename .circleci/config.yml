@@ -51,6 +51,7 @@ jobs:
             execmgmt -Notify
             cd ami-gaia-sim || exit 1
             packer validate gaiad.json
+            packer build gaiad.json
 
             if [[ "${INTEGRATION}" == "slack" ]]; then
               export BLOCKS=<< pipeline.parameters.blocks >>
