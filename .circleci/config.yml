@@ -48,15 +48,15 @@ jobs:
       - run:
           name: "Build image and run sim"
           command: |
-            execmgmt -Notify
-            cd ami-gaia-sim || exit 1
-            packer validate gaiad.json
-            packer build gaiad.json
-
             if [[ "${INTEGRATION}" == "slack" ]]; then
               export BLOCKS=<< pipeline.parameters.blocks >>
               export GENESIS=<< pipeline.parameters.genesis >>
             fi
+
+            execmgmt -Notify
+            cd ami-gaia-sim || exit 1
+            packer validate gaiad.json
+            packer build gaiad.json
 
             if [[ "${GENESIS}" == "true" ]]; then
               execmgmt -Genesis
