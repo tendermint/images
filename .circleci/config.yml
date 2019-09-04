@@ -8,10 +8,10 @@ parameters:
     default: ""
   blocks:
     type: string
-    default: ""
+    default: "50"
   genesis:
     type: string
-    default: ""
+    default: "no"
 
 executors:
   packer:
