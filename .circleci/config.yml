@@ -6,6 +6,12 @@ parameters:
   integration-type:
     type: string
     default: ""
+  blocks:
+    type: string
+    default: ""
+  genesis:
+    type: string
+    default: ""
 
 executors:
   packer:
@@ -45,6 +51,11 @@ jobs:
             execmgmt -Notify
             cd ami-gaia-sim || exit 1
             packer validate gaiad.json
+
+            if [[ "${INTEGRATION}" == "slack" ]]; then
+              export BLOCKS=<< pipeline.parameters.blocks >>
+              export GENESIS=<< pipeline.parameters.genesis >>
+            fi
 
             if [[ "${GENESIS}" == "true" ]]; then
               execmgmt -Genesis
