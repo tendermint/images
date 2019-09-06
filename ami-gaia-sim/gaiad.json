@@ -36,7 +36,7 @@
       "inline": [
         "sleep 30",
         "sudo yum -y install make git gcc curl",
-        "curl -L -O https://dl.google.com/go/{{ user `go_tarball_file_name` }}",
+        "curl -L -O https://dl.google.com/go/go{{ user `go_version` }}.linux-amd64.tar.gz",
         "sudo tar -C /usr/local -xzf go{{ user `go_version` }}.linux-amd64.tar.gz",
         "rm {{ user `go_tarball_file_name` }}"
       ]
