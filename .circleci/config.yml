@@ -1,9 +1,9 @@
 version: 2.1
 parameters:
-  gaia-commit-hash:
+  commit-hash:
     type: string
     default: "master"
-  integration-type:
+  integration:
     type: string
     default: "CI"
   blocks:
@@ -18,8 +18,8 @@ executors:
     docker:
       - image: tendermintdev/docker-hashicorp-go:latest
     environment:
-      GAIA_COMMIT_HASH: << pipeline.parameters.gaia-commit-hash >>
-      INTEGRATION: << pipeline.parameters.integration-type >>
+      GAIA_COMMIT_HASH: << pipeline.parameters.commit-hash >>
+      INTEGRATION: << pipeline.parameters.integration >>
       AWS_REGION: us-east-1
 
 commands:

@@ -2,7 +2,7 @@
   "variables": {
     "gaia_commit_hash": "{{ env `GAIA_COMMIT_HASH` }}",
     "runsim_commit_hash": "{{ env `RUNSIM_COMMIT_HASH` }}",
-    "go_tarball_file_name": "go1.12.2.linux-amd64.tar.gz"
+    "go_version": "{{ env `GO_VERSION` }}"
   },
   "builders": [
     {
@@ -37,7 +37,7 @@
         "sleep 30",
         "sudo yum -y install make git gcc curl",
         "curl -L -O https://dl.google.com/go/{{ user `go_tarball_file_name` }}",
-        "sudo tar -C /usr/local -xzf {{ user `go_tarball_file_name` }}",
+        "sudo tar -C /usr/local -xzf go{{ user `go_version` }}.linux-amd64.tar.gz",
         "rm {{ user `go_tarball_file_name` }}"
       ]
     },
