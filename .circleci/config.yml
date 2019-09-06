@@ -42,8 +42,8 @@ jobs:
           name: "Build execmgmt tool"
           command: |
             git clone https://github.com/cosmos/tools.git
-            cd tools/cmd/runsim/execmgmt || exit 1
             git checkout ${RUNSIM_COMMIT_HASH}
+            cd tools/cmd/execmgmt || exit 1
             go install
       - run:
           name: "Build image and run sim"
