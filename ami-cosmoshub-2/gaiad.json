@@ -1,6 +1,6 @@
 {
   "variables": {
-    "gaiad_version": "tags/v0.34.6",
+    "gaiad_version": "tags/v0.34.7",
     "go_tarball_file_name": "go1.12.5.linux-amd64.tar.gz"
   },
   "builders": [

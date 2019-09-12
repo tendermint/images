@@ -1,16 +1,12 @@
 {
   "variables": {
-    "gaia_commit_hash": "{{ env `GAIA_COMMIT_HASH` }}",
-    "runsim_commit_hash": "{{ env `RUNSIM_COMMIT_HASH` }}",
-    "go_version": "{{ env `GO_VERSION` }}"
+    "gaiad_version": "tags/v0.33.2",
+    "go_tarball_file_name": "go1.12.5.linux-amd64.tar.gz"
   },
   "builders": [
     {
-      "ami_name": "gaia-sim-{{ user `gaia_commit_hash` }}",
       "type": "amazon-ebs",
       "region": "us-east-1",
-      "instance_type": "t2.xlarge",
-      "ssh_username": "ec2-user",
       "force_deregister": true,
       "force_delete_snapshot": true,
       "launch_block_device_mappings": [{
@@ -27,36 +23,45 @@
         },
         "owners": ["137112412989"],
         "most_recent": true
-      }
+      },
+      "instance_type": "t2.xlarge",
+      "ssh_username": "ec2-user",
+      "ami_name": "tendermint-gaiad-{{ user `gaiad_version` }}"
     }
   ],
   "provisioners": [
     {
       "type": "shell",
       "inline": [
-        "sleep 30",
+        "sleep 20",
+        "sudo yum -y update",
         "sudo yum -y install make git gcc curl",
-        "curl -L -O https://dl.google.com/go/go{{ user `go_version` }}.linux-amd64.tar.gz",
-        "sudo tar -C /usr/local -xzf go{{ user `go_version` }}.linux-amd64.tar.gz",
-        "rm go{{ user `go_version` }}.linux-amd64.tar.gz"
+        "curl -L -O https://dl.google.com/go/{{ user `go_tarball_file_name` }}",
+        "sudo tar -C /usr/local -xzf {{ user `go_tarball_file_name` }}",
+        "rm {{ user `go_tarball_file_name` }}"
       ]
     },
     {
       "type": "file",
-      "source": "set_env.sh",
-      "destination": "/tmp/set_env.sh"
+      "source": "mount_ebs.sh",
+      "destination": "/tmp/mount_ebs.sh"
     },
     {
       "type": "file",
-      "source": "genesis.json",
-      "destination": "/tmp/genesis.json"
+      "source": "gaiad.service",
+      "destination": "/tmp/gaiad.service"
     },
     {
       "type": "shell",
       "script": "install_gaiad.sh",
       "environment_vars": [
-        "GAIA_COMMIT_HASH={{ user `gaia_commit_hash` }}",
-        "RUNSIM_COMMIT_HASH={{ user `runsim_commit_hash` }}"
+        "GAIAD_VERSION={{ user `gaiad_version` }}"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "gaiad version --long"
       ]
     }
   ]
