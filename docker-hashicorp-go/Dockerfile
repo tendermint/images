@@ -1,9 +1,8 @@
-FROM golang:1.12.7-stretch
+FROM golang:1.13
 
-ENV TERRAFORM_VERSION=0.12.5
-ENV PACKER_VERSION=1.4.2
-ENV TERRAGRUNT_VERSION=0.19.9
-ENV GO111MODULE=on
+ENV TERRAFORM_VERSION=0.12.8
+ENV PACKER_VERSION=1.4.3
+ENV TERRAGRUNT_VERSION=0.19.24
 
 RUN apt-get -y update && \
     apt-get -y install bash zip unzip git curl jq make && \
