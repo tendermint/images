@@ -70,6 +70,12 @@ jobs:
       - checkout
       - build-docker
 
+  docker-tendermint-build:
+    machine: true
+    steps:
+      - checkout
+      - build-docker
+
   iam-management:
     machine: true
     steps:
@@ -122,7 +128,7 @@ workflows:
           filters:
             branches:
               only: docker-hashicorp-go
-              
+
       - docker-tendermint-build:
           filters:
             branches:
