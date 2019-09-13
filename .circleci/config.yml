@@ -122,6 +122,11 @@ workflows:
           filters:
             branches:
               only: docker-hashicorp-go
+              
+      - docker-tendermint-build:
+          filters:
+            branches:
+              only: docker-tendermint-build
 
   run-gaia-sim:
     jobs:
