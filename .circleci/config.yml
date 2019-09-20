@@ -1,86 +1,104 @@
-version: 2
+version: 2.1
+parameters:
+  commit-hash:
+    type: string
+    default: "master"
+  integration:
+    type: string
+    default: "CI"
+  blocks:
+    type: string
+    default: "50"
+  genesis:
+    type: string
+    default: "no"
 
-packer: &packer
-  docker:
-    - image: tendermintdev/docker-hashicorp-go:latest
-  working_directory: ~/packer
+executors:
+  packer:
+    docker:
+      - image: tendermintdev/docker-hashicorp-go:latest
+    environment:
+      GAIA_COMMIT_HASH: << pipeline.parameters.commit-hash >>
+      INTEGRATION: << pipeline.parameters.integration >>
+      AWS_REGION: us-east-1
 
-build-docker: &build-docker
-  run:
-    name: "Build docker image"
-    command: |
-      cd ${CIRCLE_BRANCH}
-      docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS
-      docker build -t tendermintdev/${CIRCLE_BRANCH} .
-      docker push tendermintdev/${CIRCLE_BRANCH}
+commands:
+  build-docker:
+    steps:
+      - run:
+          name: "Build docker image"
+          command: |
+            cd ${CIRCLE_BRANCH}
+            docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS
+            docker build -t tendermintdev/${CIRCLE_BRANCH} .
+            docker push tendermintdev/${CIRCLE_BRANCH}
 
 jobs:
-  build:
-    <<: *packer
+  ami-gaia-sim:
+    executor: packer
     steps:
       - checkout
       - run:
-          name: "Run simulation"
+          name: "Build execmgmt tool"
           command: |
-            cd ami-gaia-sim
-            go install github.com/cosmos/tools/cmd/runsim/execmgmt
-
-            if [[ "${CIRCLE_BRANCH}" == "master" ]]; then
-              export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_DEV
-              export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_DEV
-              export MSGTS=`execmgmt -notify -b ${BLOCKS} -p ${PERIOD} -s ${SLACK_TOKEN_DEV} -c ${SLACK_CHANNEL_ID_DEV} -g ${GAIA_COMMIT_HASH}`
-            else
-              export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_PROD
-              export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_PROD
-              export MSGTS=`execmgmt -notify -b ${BLOCKS} -p ${PERIOD} -s ${SLACK_TOKEN_PROD} -c ${SLACK_CHANNEL_ID_PROD} -g ${GAIA_COMMIT_HASH}`
+            git clone https://github.com/cosmos/tools.git
+            git checkout ${RUNSIM_COMMIT_HASH}
+            cd tools/cmd/execmgmt || exit 1
+            go install
+      - run:
+          name: "Build image and run sim"
+          command: |
+            if [[ "${INTEGRATION}" == "slack" ]]; then
+              export BLOCKS=<< pipeline.parameters.blocks >>
+              export GENESIS=<< pipeline.parameters.genesis >>
             fi
 
+            execmgmt -Notify
+            cd ami-gaia-sim || exit 1
             packer validate gaiad.json
             packer build gaiad.json
 
-            if [[ "${CIRCLE_BRANCH}" == "master" ]]; then
-              if [[ "${GENESIS}" == "true" ]]; then
-                execmgmt -gen -b ${BLOCKS} -p ${PERIOD} -g ${GAIA_COMMIT_HASH} -c ${SLACK_CHANNEL_ID_DEV} -s ${SLACK_TOKEN_DEV}
-              else
-                execmgmt -b ${BLOCKS} -p ${PERIOD} -g ${GAIA_COMMIT_HASH} -c ${SLACK_CHANNEL_ID_DEV} -s ${SLACK_TOKEN_DEV}
-              fi
+            if [[ "${GENESIS}" == "true" ]]; then
+              execmgmt -Genesis
             else
-              if [[ "${GENESIS}" == "true" ]]; then
-                execmgmt -gen -b ${BLOCKS} -p ${PERIOD} -g ${GAIA_COMMIT_HASH} -c ${SLACK_CHANNEL_ID_PROD} -s ${SLACK_TOKEN_PROD}
-              else
-                execmgmt -b ${BLOCKS} -p ${PERIOD} -g ${GAIA_COMMIT_HASH} -c ${SLACK_CHANNEL_ID_PROD} -s ${SLACK_TOKEN_PROD}
-              fi
+              execmgmt
             fi
 
   docker-hashicorp-go:
     machine: true
     steps:
       - checkout
-      - *build-docker
+      - build-docker
+
+  docker-tendermint-build:
+    machine: true
+    steps:
+      - checkout
+      - build-docker
 
   iam-management:
     machine: true
     steps:
       - checkout
-      - *build-docker
+      - build-docker
 
   website-deployment-yarn:
     machine: true
     steps:
       - checkout
-      - *build-docker
+      - build-docker
 
   terragrunt:
     machine: true
     steps:
       - checkout
-      - *build-docker
+      - build-docker
 
   docs-deployment:
     machine: true
     steps:
       - checkout
-      - *build-docker
+      - build-docker
 
 workflows:
   version: 2
@@ -110,3 +128,22 @@ workflows:
           filters:
             branches:
               only: docker-hashicorp-go
+
+      - docker-tendermint-build:
+          filters:
+            branches:
+              only: docker-tendermint-build
+
+  run-gaia-sim:
+    jobs:
+      - ami-gaia-sim:
+          context: gaia-sim-dev
+          filters:
+            branches:
+              only: master
+
+      - ami-gaia-sim:
+          context: gaia-sim-prod
+          filters:
+            branches:
+              only: ami-gaia-sim
