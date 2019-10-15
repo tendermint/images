@@ -1,0 +1,34 @@
+upstream <DNS-NAME> {
+        server localhost:26657;
+}
+
+server {
+    listen       443 ssl ;
+    listen       [::]:443 ;
+    server_name  <DNS-NAME> ;
+
+    location / {
+       proxy_set_header X-real-ip $remote_addr;
+       proxy_pass http://<DNS-NAME> ;
+    }
+
+    error_page 404 /404.html;
+        location = /40x.html {
+    }
+
+    error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+    }
+}
+
+server {
+    if ($host = <DNS-NAME>) {
+        return 301 https://$host$request_uri ;
+    }
+
+    listen      80 ;
+    listen      [::]:80 ;
+
+    server_name <DNS-NAME> ;
+    return 404 ;
+}

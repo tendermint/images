@@ -1,0 +1,72 @@
+{
+  "variables": {
+    "gaia_version": "tags/v2.0.2",
+    "go_tarball_file_name": "go1.13.1.linux-amd64.tar.gz",
+    "aws_region": "us-east-2",
+    "gaiad_dns_name": null,
+    "gaiacli_dns_name": null
+  },
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "region": "{{ user `aws_region` }}",
+      "force_deregister": true,
+      "force_delete_snapshot": true,
+      "launch_block_device_mappings": [{
+        "device_name": "/dev/sda1",
+        "volume_size": 8,
+        "volume_type": "gp2",
+        "delete_on_termination": true
+      }],
+      "source_ami_filter": {
+        "filters": {
+          "virtualization-type": "hvm",
+          "name": "*ubuntu-bionic-18.04-amd64-server-*",
+          "root-device-type": "ebs"
+        },
+        "owners": ["099720109477"],
+        "most_recent": true
+      },
+      "instance_type": "t3a.medium",
+      "ssh_username": "ubuntu",
+      "ami_name": "tendermint-testnet-node-{{ user `gaia_version` }}"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "files",
+      "destination": "/tmp"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sudo useradd -m gaia -s /bin/bash",
+        "wget http://nginx.org/keys/nginx_signing.key",
+        "sudo apt-key add nginx_signing.key",
+        "sudo add-apt-repository ppa:certbot/certbot -y",
+        "sudo apt-get full-upgrade -y",
+        "sudo apt-get install make git gcc curl nginx certbot python-certbot-nginx -y",
+        "curl -L -O https://dl.google.com/go/{{ user `go_tarball_file_name` }}",
+        "sudo tar -C /usr/local -xzf {{ user `go_tarball_file_name` }}",
+        "rm {{ user `go_tarball_file_name` }}"
+      ]
+    },
+    {
+      "type": "shell",
+      "script": "node_setup.sh",
+      "environment_vars": [
+        "GAIA_VERSION={{ user `gaia_version` }}",
+        "GAIAD_DNS_NAME={{ user `gaiad_dns_name` }}",
+        "GAIACLI_DNS_NAME={{ user `gaiacli_dns_name` }}"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "gaiacli version --long",
+        "gaiad version -- long"
+      ]
+    }
+  ]
+}
