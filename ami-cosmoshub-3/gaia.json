@@ -1,0 +1,76 @@
+{
+  "variables": {
+    "gaiad_version": "tags/v2.0.3",
+    "go_tarball_file_name": "go1.13.5.linux-amd64.tar.gz"
+  },
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "region": "us-east-1",
+      "force_deregister": true,
+      "force_delete_snapshot": true,
+      "launch_block_device_mappings": [{
+        "device_name": "/dev/sda1",
+        "volume_size": 8,
+        "volume_type": "gp2",
+        "delete_on_termination": true
+      }],
+      "source_ami_filter": {
+        "filters": {
+          "virtualization-type": "hvm",
+          "name": "*hvm-ssd/ubuntu-bionic-18.04-amd64-server*",
+          "root-device-type": "ebs"
+        },
+        "owners": ["099720109477"],
+        "most_recent": true
+      },
+      "instance_type": "t3a.large",
+      "ssh_username": "ubuntu",
+      "ami_name": "tendermint-gaiad-{{ user `gaiad_version` }}"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "sudo apt-get -y update",
+        "sudo apt-get install software-properties-common",
+        "sudo add-apt-repository ppa:certbot/certbot -y",
+        "DEBIAN_FRONTEND=noninteractive sudo apt-get -y -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" upgrade sudo apt-get -y upgrade",
+        "sudo apt-get -y install make git gcc curl nginx certbot python-certbot-nginx",
+        "curl -L -O https://dl.google.com/go/{{ user `go_tarball_file_name` }}",
+        "sudo tar -C /usr/local -xzf {{ user `go_tarball_file_name` }}",
+        "rm {{ user `go_tarball_file_name` }}",
+        "sudo useradd -m gaia"
+      ]
+    },
+    {
+      "type": "file",
+      "source": "gaiad.service",
+      "destination": "/tmp/gaiad.service"
+    },
+    {
+      "type": "file",
+      "source": "nginx.conf",
+      "destination": "/tmp/nginx.conf"
+    },
+    {
+      "type": "file",
+      "source": "gaiacli.service",
+      "destination": "/tmp/gaiacli.service"
+    },
+    {
+      "type": "shell",
+      "script": "install.sh",
+      "environment_vars": [
+        "GAIAD_VERSION={{ user `gaiad_version` }}"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "gaiad version --long"
+      ]
+    }
+  ]
+}
