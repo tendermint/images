@@ -3,7 +3,7 @@ FROM ubuntu:18.04
 ENV PROTOC_VERSION=3.11.2
 ENV GO_VERSION=1.13.5
 ENV BUF_VERSION=0.5.0
-ENV PATH="${PATH}:/usr/local/go/bin"
+ENV PATH="${PATH}:/usr/local/go/bin:${HOME}/go/bin"
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl git make unzip ca-certificates
 RUN rm -rf /var/lib/apt/lists/*
