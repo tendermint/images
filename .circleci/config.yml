@@ -134,6 +134,11 @@ workflows:
             branches:
               only: docker-tendermint-build
 
+      - docker-protoc:
+          filters:
+            branches:
+              only: docker-protoc
+
   run-gaia-sim:
     jobs:
       - ami-gaia-sim:
