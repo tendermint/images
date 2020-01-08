@@ -23,6 +23,8 @@ RUN tar -C /usr/local -xzf "go${GO_VERSION}.linux-amd64.tar.gz"
 ## Install buf
 
 RUN curl -sSL "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/buf-Linux-x86_64" -o "${BIN}/buf"
-RUN chmod +x "${BIN}/buf"
+RUN curl -sSL "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/protoc-gen-buf-check-breaking-Linux-x86_64" -o "${BIN}/protoc-gen-buf-check-breaking"
+RUN curl -sSL "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/protoc-gen-buf-check-lint-Linux-x86_64" -o "${BIN}/protoc-gen-buf-check-lint"
+RUN chmod +x "${BIN}/buf" "${BIN}/protoc-gen-buf-check-breaking" "${BIN}/protoc-gen-buf-check-lint"
 
 CMD ["/bin/bash"]
