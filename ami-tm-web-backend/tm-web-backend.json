@@ -42,8 +42,18 @@
         "sudo mv /tmp/nginx.conf /etc/nginx/nginx.conf",
         "sudo systemctl enable nginx",
         "curl -sL https://deb.nodesource.com/setup_{{ user `node_version` }} | sudo -E bash -",
-        "sudo apt-get -y install nodejs"
+        "sudo apt-get -y install nodejs",
+        "sudo useradd -m backend"
       ]
+    },
+    {
+      "type": "file",
+      "source": "backend.service",
+      "destination": "/tmp/backend.service"
+    },
+    {
+      "type": "shell",
+      "script": "install_backend.sh"
     }
   ]
 }
