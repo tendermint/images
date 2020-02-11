@@ -1,8 +1,8 @@
 FROM ubuntu:18.04
 
 ENV PROTOC_VERSION=3.11.2
-ENV GO_VERSION=1.13.5
-ENV BUF_VERSION=0.5.0
+ENV GO_VERSION=1.13.7
+ENV BUF_VERSION=0.7.0
 ENV PATH="${PATH}:/usr/local/go/bin:/root/go/bin"
 ENV BIN="/usr/local/bin"
 
