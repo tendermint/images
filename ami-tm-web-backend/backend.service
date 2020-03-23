@@ -1,0 +1,19 @@
+[Unit]
+Description=TM Web Backend
+Requires=network-online.target
+After=network-online.target
+
+[Service]
+Type=exec
+User=backend
+Group=backend
+Restart=on-failure
+WorkingDirectory=/home/backend/backend
+PermissionsStartOnly=true
+Environment=PORT=39206
+ExecStart=/usr/bin/npm run start
+ExecReload=/bin/kill -HUP $MAINPID
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=multi-user.target

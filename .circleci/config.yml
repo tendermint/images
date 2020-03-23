@@ -100,6 +100,18 @@ jobs:
       - checkout
       - build-docker
 
+  docker-protoc:
+    machine: true
+    steps:
+      - checkout
+      - build-docker
+
+  docker-tm-db-testing:
+    machine: true
+    steps:
+      - checkout
+      - build-docker
+
 workflows:
   version: 2
   build-image:
@@ -133,6 +145,16 @@ workflows:
           filters:
             branches:
               only: docker-tendermint-build
+
+      - docker-protoc:
+          filters:
+            branches:
+              only: docker-protoc
+
+      - docker-tm-db-testing:
+          filters:
+            branches:
+              only: docker-tm-db-testing
 
   run-gaia-sim:
     jobs:

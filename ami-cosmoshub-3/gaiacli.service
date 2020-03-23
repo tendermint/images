@@ -1,0 +1,17 @@
+[Unit]
+Description=gaiacli
+Requires=network-online.target
+After=network-online.target
+
+[Service]
+Type=exec
+User=gaia
+Group=gaia
+Restart=on-failure
+PermissionsStartOnly=true
+ExecStart=/usr/bin/gaiacli rest-server --laddr tcp://127.0.0.1:1317 --trust-node true --node tcp://127.0.0.1:26657
+ExecReload=/bin/kill -HUP $MAINPID
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=multi-user.target

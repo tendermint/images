@@ -1,0 +1,59 @@
+{
+  "variables": {
+    "node_version": "13.x"
+  },
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "region": "us-east-1",
+      "force_deregister": true,
+      "force_delete_snapshot": true,
+      "source_ami_filter": {
+        "filters": {
+          "virtualization-type": "hvm",
+          "name": "*ubuntu-bionic-18.04-amd64-server*",
+          "root-device-type": "ebs"
+        },
+        "owners": ["099720109477"],
+        "most_recent": true
+      },
+      "instance_type": "t2.xlarge",
+      "ssh_username": "ubuntu",
+      "ami_name": "tm-web-backend"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "nginx.conf",
+      "destination": "/tmp/nginx.conf"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sleep 10",
+        "sudo apt-get update",
+        "sudo apt-get -y upgrade",
+        "sudo apt-get install software-properties-common",
+        "sudo add-apt-repository universe",
+        "sudo add-apt-repository ppa:certbot/certbot",
+        "sudo apt-get update",
+        "sudo apt-get -y install nginx certbot python-certbot-nginx",
+        "sudo mv /tmp/nginx.conf /etc/nginx/nginx.conf",
+        "sudo systemctl enable nginx",
+        "curl -sL https://deb.nodesource.com/setup_{{ user `node_version` }} | sudo -E bash -",
+        "sudo apt-get -y install nodejs",
+        "sudo useradd -m backend"
+      ]
+    },
+    {
+      "type": "file",
+      "source": "backend.service",
+      "destination": "/tmp/backend.service"
+    },
+    {
+      "type": "shell",
+      "script": "install_backend.sh"
+    }
+  ]
+}

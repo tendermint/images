@@ -1,7 +1,9 @@
-### Website deployment using yarn
+### Website deployment
+
+> Deployment is using npm by default
 
 To pull this image:  
-`docker pull tendermintdev/docker-website-deployment-yarn`  
+`docker pull tendermintdev/docker-website-deployment`
 
 Image is used to deploy new versions of S3 hosted websites.
 
