@@ -4,7 +4,7 @@ ENV GO_VERSION=1.14.1
 ENV PATH="${PATH}:/usr/local/go/bin:/root/go/bin"
 ENV BIN="/usr/local/bin"
 
-RUN apt-get update && apt-get install -y --no-install-recommends curl git make unzip ca-certificates
+RUN apk update && apk add curl git make unzip ca-certificates
 RUN rm -rf /var/lib/apt/lists/*
 
 ## Install golang
