@@ -12,4 +12,4 @@ RUN rm -rf /var/lib/apt/lists/*
 RUN curl -OL "https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz"
 RUN tar -C /usr/local -xzf "go${GO_VERSION}.linux-amd64.tar.gz"
 
-CMD ["/bin/bash"]
+CMD ["/bin/sh"]
