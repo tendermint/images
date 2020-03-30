@@ -32,7 +32,7 @@ ENV \
   ALPINE_PROTOBUF_VERSION_SUFFIX=r1
 
 RUN echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories && \
-  apk add --update --no-cache bash curl git grpc=${GRPC_VERSION}-${ALPINE_GRPC_VERSION_SUFFIX} protobuf=${PROTOBUF_VERSION}-${ALPINE_PROTOBUF_VERSION_SUFFIX} && \
+  apk add --update --no-cache grpc=${GRPC_VERSION}-${ALPINE_GRPC_VERSION_SUFFIX} protobuf=${PROTOBUF_VERSION}-${ALPINE_PROTOBUF_VERSION_SUFFIX} && \
   rm -rf /var/cache/apk/*
 
 COPY --from=builder /usr/local/bin /usr/local/bin
