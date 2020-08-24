@@ -7,7 +7,8 @@ ENV GOLANG_PROTOBUF_VERSION=1.3.1 \
   GOGO_PROTOBUF_VERSION=1.3.1
 RUN GO111MODULE=on go get \
   github.com/golang/protobuf/protoc-gen-go@v${GOLANG_PROTOBUF_VERSION} \
-  github.com/gogo/protobuf/protoc-gen-gogo@v${GOGO_PROTOBUF_VERSION} && \
+  github.com/gogo/protobuf/protoc-gen-gogo@v${GOGO_PROTOBUF_VERSION} \
+  github.com/gogo/protobuf/protoc-gen-gogofaster@v${GOGO_PROTOBUF_VERSION} && \
   mv /go/bin/protoc-gen-go* /usr/local/bin/
 
 ENV PROTOBUF_VERSION=3.11.4
@@ -26,10 +27,10 @@ FROM alpine:edge
 WORKDIR /work
 
 ENV \
-  GRPC_VERSION=1.27.3 \
-  PROTOBUF_VERSION=3.11.4 \
+  GRPC_VERSION=1.31.1 \
+  PROTOBUF_VERSION=3.12.3 \
   ALPINE_GRPC_VERSION_SUFFIX=r0 \
-  ALPINE_PROTOBUF_VERSION_SUFFIX=r1
+  ALPINE_PROTOBUF_VERSION_SUFFIX=r0
 
 RUN echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories && \
   apk add --update --no-cache grpc=${GRPC_VERSION}-${ALPINE_GRPC_VERSION_SUFFIX} protobuf=${PROTOBUF_VERSION}-${ALPINE_PROTOBUF_VERSION_SUFFIX} && \
