@@ -106,12 +106,6 @@ jobs:
       - checkout
       - build-docker
 
-  docker-protoc:
-    machine: true
-    steps:
-      - checkout
-      - build-docker
-
   docker-tm-db-testing:
     machine: true
     steps:
@@ -151,11 +145,6 @@ workflows:
           filters:
             branches:
               only: docker-tendermint-build
-
-      - docker-protoc:
-          filters:
-            branches:
-              only: docker-protoc
 
       - docker-build-proto:
           filters:
