@@ -27,14 +27,16 @@ FROM alpine:edge
 WORKDIR /work
 
 ENV \
-  GRPC_VERSION=1.31.1 \
-  PROTOBUF_VERSION=3.12.3 \
+  GRPC_VERSION=1.32.0 \
+  PROTOBUF_VERSION=3.13.0 \
   ALPINE_GRPC_VERSION_SUFFIX=r0 \
   ALPINE_PROTOBUF_VERSION_SUFFIX=r0
 
 RUN echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories && \
   apk add --update --no-cache grpc=${GRPC_VERSION}-${ALPINE_GRPC_VERSION_SUFFIX} protobuf=${PROTOBUF_VERSION}-${ALPINE_PROTOBUF_VERSION_SUFFIX} && \
   rm -rf /var/cache/apk/*
+
+RUN apk add --no-cache clang
 
 COPY --from=builder /usr/local/bin /usr/local/bin
 COPY --from=builder /usr/local/include /usr/include
