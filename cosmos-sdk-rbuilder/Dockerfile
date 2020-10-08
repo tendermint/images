@@ -1,4 +1,4 @@
-FROM golang:1.15.0-buster
+FROM golang:1.15.2-buster
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get --no-install-recommends -y install \
     pciutils build-essential git wget \
@@ -12,11 +12,13 @@ COPY buildlib.sh /usr/local/share/cosmos-sdk/
 RUN useradd -ms /bin/bash -U builder
 ARG APP
 ARG DEBUG
+ARG TARGET_PLATFORMS
 ENV APP ${APP:-cosmos-sdk}
 ENV DEBUG ${DEBUG}
 ENV VERSION unknown
 ENV COMMIT unknown
 ENV LEDGER_ENABLE true
+ENV TARGET_PLATFORMS ${TARGET_PLATFORMS:-linux/amd64}
 
 # Drop root privileges.
 USER builder:builder
