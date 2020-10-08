@@ -3,7 +3,7 @@
 This image is meant to provide a minimal deterministic
 buildsystem for Cosmos SDK applications.
 
-# Requirements And Usage
+## Requirements And Usage
 
 The client application's repository must include an
 `build.sh` executable file in the root folder meant to drive the build
@@ -66,7 +66,7 @@ generate_build_report
 cat ${OUTDIR}/build_report
 ```
 
-# Makefile integration
+## Makefile integration
 
 An example of integration with the client application's `Makefile` follows:
 
