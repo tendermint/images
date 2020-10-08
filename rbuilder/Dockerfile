@@ -1,8 +1,11 @@
 FROM golang:1.15.2-buster
+
 ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update && apt-get --no-install-recommends -y install \
     pciutils build-essential git wget \
     lsb-release dpkg-dev curl bsdmainutils fakeroot
+
 RUN mkdir -p /usr/local/share/cosmos-sdk/
 
 # Deploy the shell functions library.
