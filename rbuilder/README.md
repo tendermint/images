@@ -1,6 +1,6 @@
 # Reproducible Build System
 
-This image is meant to provide a minimal deterministic 
+This image is meant to provide a minimal deterministic
 buildsystem for Cosmos SDK applications.
 
 # Requirements And Usage
@@ -9,6 +9,7 @@ The client application's repository must include an
 `build.sh` executable file in the root folder meant to drive the build
 process. The following environment variables are passed through
 and made available to the `build.sh` script:
+
 * `APP` - the application's name.
 * `VERSION` - the application's version.
 * `COMMIT` - the application's VCS commit's hash.
@@ -75,14 +76,14 @@ COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 
 build-simd-all: go.sum
-	docker pull cosmossdk/rbuilder:latest
-	docker rm latest-build || true
-	docker run --volume=$(CURDIR):/sources:ro \
+ docker pull tendermintdev/rbuilder:latest
+ docker rm latest-build || true
+ docker run --volume=$(CURDIR):/sources:ro \
         --env TARGET_PLATFORMS='linux/amd64 darwin/amd64 linux/arm64 windows/amd64'
         --env APP=simd \
         --env VERSION=$(VERSION) \
         --env COMMIT=$(COMMIT) \
         --env LEDGER_ENABLED=$(LEDGER_ENABLED) \
-        --name latest-build cosmossdk/rbuilder:latest
-	docker cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
+        --name latest-build tendermintdev/rbuilder:latest
+ docker cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
 ```
