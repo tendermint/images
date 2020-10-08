@@ -12,7 +12,7 @@ and made available to the `build.sh` script:
 * `APP` - the application's name.
 * `VERSION` - the application's version.
 * `COMMIT` - the application's VCS commit's hash.
-* `TARGET_OS` - whitespace-separated list of target operating systems (`linux`, `darwin`, and `windows` are supported).
+* `TARGET_PLATFORMS` - whitespace-separated list of operating system/architecture pairs. `linux/amd64`, `linux/arm64`, `darwin/amd64`, and `windows/amd64` are supported. Default: `linux/amd64`.
 * `LEDGER_ENABLED` - whether Ledger is enabled (default: `true`).
 * `DEBUG` - run build with debug output. Default: empty (disabled).
 
