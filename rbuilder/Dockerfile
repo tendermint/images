@@ -28,4 +28,4 @@ WORKDIR /sources
 VOLUME [ "/sources" ]
 
 # Run the application's build.sh.
-ENTRYPOINT [ "/sources/build.sh" ]
+ENTRYPOINT [ "/sources/scripts/build.sh" ]

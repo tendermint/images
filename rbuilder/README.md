@@ -1,12 +1,12 @@
 # Reproducible Build System
 
 This image is meant to provide a minimal deterministic
-buildsystem for Cosmos SDK applications.
+build system for Tendermint applications.
 
 # Requirements And Usage
 
 The client application's repository must include an
-`build.sh` executable file in the root folder meant to drive the build
+`build.sh` executable file in the `/scripts` folder meant to drive the build
 process. The following environment variables are passed through
 and made available to the `build.sh` script:
 
