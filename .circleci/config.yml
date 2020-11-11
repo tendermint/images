@@ -94,12 +94,6 @@ jobs:
       - checkout
       - build-docker
 
-  docker-tm-db-testing:
-    machine: true
-    steps:
-      - checkout
-      - build-docker
-
 workflows:
   version: 2
   build-image:
@@ -128,11 +122,6 @@ workflows:
           filters:
             branches:
               only: docker-hashicorp-go
-
-      - docker-tm-db-testing:
-          filters:
-            branches:
-              only: docker-tm-db-testing
 
   run-gaia-sim:
     jobs:
