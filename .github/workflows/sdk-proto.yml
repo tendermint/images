@@ -1,13 +1,13 @@
-name: Build & Push rbuilder
-#  Build & Push rebuilds the rbuilder docker image on every push to master
+name: Build & Push SDK Proto Builder
 on:
   pull_request:
-    paths: docker-build-sdk-proto
+    paths:
+      - "docker-build-sdk-proto/*"
   push:
     branches:
       - master
     paths:
-      - docker-build-sdk-proto
+      - "docker-build-sdk-proto/*"
 
 jobs:
   build:
