@@ -8,6 +8,9 @@ on:
       - master
     paths:
       - "docker-build-sdk-proto/*"
+  schedule:
+    # run this job once a month to recieve any go or buf updates
+    - cron: "* * 1 * *"
 
 jobs:
   build:
