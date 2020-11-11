@@ -17,7 +17,7 @@ jobs:
       - name: Prepare
         id: prep
         run: |
-          DOCKER_IMAGE=tendermintdev/rbuilder
+          DOCKER_IMAGE=tendermintdev/sdk-proto-gen
           VERSION=noop
           if [[ $GITHUB_REF == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/}

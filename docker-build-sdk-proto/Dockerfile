@@ -15,6 +15,7 @@ RUN GO111MODULE=on go get \
   github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v${GRPC_GATEWAY_VERSION} \
   github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v${GRPC_GATEWAY_VERSION} 
 
-# protoc-gen-cosmos needs to be installed in the root of the cosmos-sdk. For this reason it is run in the protoc-gen script
+# protoc-gen-cosmos needs to be installed in the root of the cosmos-sdk. 
+# For this reason it is run in the protoc-gen script
 
 COPY --from=builder /usr/local/bin /usr/local/bin
