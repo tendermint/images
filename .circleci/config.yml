@@ -76,12 +76,6 @@ jobs:
       - checkout
       - build-docker
 
-  docker-build-proto:
-    machine: true
-    steps:
-      - checkout
-      - build-docker
-
   iam-management:
     machine: true
     steps:
@@ -145,11 +139,6 @@ workflows:
           filters:
             branches:
               only: docker-tendermint-build
-
-      - docker-build-proto:
-          filters:
-            branches:
-              only: docker-build-proto
 
       - docker-tm-db-testing:
           filters:
