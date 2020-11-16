@@ -1,8 +1,6 @@
 name: Build & Push TM-Build
 on:
   pull_request:
-    paths:
-      - "docker-tendermint-build/*"
   push:
     branches:
       - master
@@ -47,5 +45,5 @@ jobs:
         with:
           context: ./docker-tendermint-build
           file: ./docker-tendermint-build/Dockerfile
-          push: ${{ github.event_name != 'pull_request' }}
+          push: true
           tags: ${{ steps.prep.outputs.tags }}
