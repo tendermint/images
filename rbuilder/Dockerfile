@@ -19,6 +19,7 @@ ENV VERSION unknown
 ENV COMMIT unknown
 ENV LEDGER_ENABLE true
 ENV TARGET_PLATFORMS ${TARGET_PLATFORMS:-linux/amd64}
+ENV BUILD_SCRIPT ${BUILD_SCRIPT:-/sources/.build.sh}
 
 # Drop root privileges.
 USER builder:builder
@@ -28,4 +29,4 @@ WORKDIR /sources
 VOLUME [ "/sources" ]
 
 # Run the application's build.sh.
-ENTRYPOINT [ "/sources/build.sh" ]
+ENTRYPOINT [ "/bin/bash", "-c", "${BUILD_SCRIPT}" ]
