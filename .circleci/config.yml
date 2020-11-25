@@ -70,18 +70,6 @@ jobs:
       - checkout
       - build-docker
 
-  docker-tendermint-build:
-    machine: true
-    steps:
-      - checkout
-      - build-docker
-
-  docker-build-proto:
-    machine: true
-    steps:
-      - checkout
-      - build-docker
-
   iam-management:
     machine: true
     steps:
@@ -101,12 +89,6 @@ jobs:
       - build-docker
 
   docs-deployment:
-    machine: true
-    steps:
-      - checkout
-      - build-docker
-
-  docker-tm-db-testing:
     machine: true
     steps:
       - checkout
@@ -140,21 +122,6 @@ workflows:
           filters:
             branches:
               only: docker-hashicorp-go
-
-      - docker-tendermint-build:
-          filters:
-            branches:
-              only: docker-tendermint-build
-
-      - docker-build-proto:
-          filters:
-            branches:
-              only: docker-build-proto
-
-      - docker-tm-db-testing:
-          filters:
-            branches:
-              only: docker-tm-db-testing
 
   run-gaia-sim:
     jobs:
