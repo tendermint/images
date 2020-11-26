@@ -13,7 +13,7 @@ RUN useradd -ms /bin/bash -U builder
 ARG APP
 ARG DEBUG
 ARG TARGET_PLATFORMS
-ENV APP ${APP:-tendermint}
+ENV APP ${APP:-app}
 ENV DEBUG ${DEBUG}
 ENV VERSION unknown
 ENV COMMIT unknown
