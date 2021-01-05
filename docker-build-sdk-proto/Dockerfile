@@ -1,4 +1,4 @@
-FROM bufbuild/buf:latest as builder
+FROM bufbuild/buf:latest as BUILDER
 
 FROM golang:alpine
 
@@ -18,4 +18,4 @@ RUN GO111MODULE=on go get \
 # protoc-gen-cosmos needs to be installed in the root of the cosmos-sdk. 
 # For this reason it is run in the protoc-gen script
 
-COPY --from=builder /usr/local/bin /usr/local/bin
+COPY --from=BUILDER /usr/local/bin /usr/local/bin
