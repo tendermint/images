@@ -6,9 +6,9 @@ buildsystem for Cosmos SDK applications.
 # Requirements And Usage
 
 The client application's repository must include an
-`build.sh` executable file in the root folder meant to drive the build
+`.build.sh` executable file in the root folder meant to drive the build
 process. The following environment variables are passed through
-and made available to the `build.sh` script:
+and made available to the `.build.sh` script:
 
 * `APP` - the application's name.
 * `VERSION` - the application's version.
@@ -16,8 +16,9 @@ and made available to the `build.sh` script:
 * `TARGET_PLATFORMS` - whitespace-separated list of operating system/architecture pairs. `linux/amd64`, `linux/arm64`, `darwin/amd64`, and `windows/amd64` are supported. Default: `linux/amd64`.
 * `LEDGER_ENABLED` - whether Ledger is enabled (default: `true`).
 * `DEBUG` - run build with debug output. Default: empty (disabled).
+* `BUILD_SCRIPT` - path to the build script. Default: `.build.sh`
 
-The build's outputs are produced in the top-level `artifacts` directory. An example of `build.sh` follows:
+The build's outputs are produced in the top-level `artifacts` directory. An example of `.build.sh` follows:
 
 ```bash
 #!/bin/bash
