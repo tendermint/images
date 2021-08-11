@@ -44,8 +44,8 @@ jobs:
       - name: Publish to Docker Hub
         uses: docker/build-push-action@v2
         with:
-          context: ./DOCKER
-          file: ./DOCKER/Dockerfile
+          context: ./rbuilder
+          file: ./rbuilder/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.prep.outputs.tags }}
           platforms: darwin/arm64,linux/amd64,darwin/amd64
