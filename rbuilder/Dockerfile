@@ -1,4 +1,4 @@
-FROM golang:1.16.7-buster
+FROM golang:1.17.1-buster
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get --no-install-recommends -y install \
     pciutils build-essential git wget \
